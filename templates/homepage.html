@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Hello OpenCV.js</title>
+
+<style>
+  .inputoutput {
+    border: 2px solid black;
+    margin: 10px;
+    padding: 10px;
+    display: inline-block;
+    text-align: center;
+  }
+  .caption {
+    margin-top: 10px;
+  }
+  .container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+</style>
+</head>
+<body>
+<h2>Hello OpenCV.js</h2>
+<div class="container">
+  <div class="inputoutput">
+    <img id="imageSrcFront" alt="No Image" style="width: 200px; height: 200px;" />
+    <div class="caption">Front <input type="file" id="fileInputFront" name="file" /></div>
+  </div>
+  <div class="inputoutput">
+    <img id="imageSrcBack" alt="No Image" style="width: 200px; height: 200px;" />
+    <div class="caption">Back <input type="file" id="fileInputBack" name="file" /></div>
+  </div>
+  <div class="inputoutput">
+    <img id="imageSrcLeft" alt="No Image" style="width: 200px; height: 200px;" />
+    <div class="caption">Left <input type="file" id="fileInputLeft" name="file" /></div>
+  </div>
+  <div class="inputoutput">
+    <img id="imageSrcRight" alt="No Image" style="width: 200px; height: 200px;" />
+    <div class="caption">Right <input type="file" id="fileInputRight" name="file" /></div>
+  </div>
+</div>
+<script type="text/javascript">
+  document.getElementById("fileInputFront").addEventListener("change", (e) => {
+    document.getElementById("imageSrcFront").src = URL.createObjectURL(e.target.files[0]);
+  }, false);
+
+  document.getElementById("fileInputBack").addEventListener("change", (e) => {
+    document.getElementById("imageSrcBack").src = URL.createObjectURL(e.target.files[0]);
+  }, false);
+
+  document.getElementById("fileInputLeft").addEventListener("change", (e) => {
+    document.getElementById("imageSrcLeft").src = URL.createObjectURL(e.target.files[0]);
+  }, false);
+
+  document.getElementById("fileInputRight").addEventListener("change", (e) => {
+    document.getElementById("imageSrcRight").src = URL.createObjectURL(e.target.files[0]);
+  }, false);
+</script>
+</body>
+</html>
