@@ -59,4 +59,28 @@
     document.getElementById("imageSrcRight").src = URL.createObjectURL(e.target.files[0]);
   }, false);
 </script>
+<script>
+$(document).ready(function() {
+    $("#imageSrcFRont").on("click", function(event) {
+        var x = event.offsetX;
+        var y = event.offsetY;
+
+        // Send coordinates to Flask backend using AJAX
+        $.ajax({
+            type: "POST",
+            url: "/get_coordinates",
+            data: JSON.stringify({x: x, y: y}),
+            contentType: "application/json",
+            success: function(response) {
+                console.log(response);
+                // Handle success response if needed
+            },
+            error: function(error) {
+                console.error("Error:", error);
+                // Handle error if needed
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
