@@ -25,23 +25,30 @@
 <div class="container">
   <div class="inputoutput">
     <img id="imageSrcFront" alt="No Image" style="width: 200px; height: 200px;" />
-    <div class="caption">Front <input type="file" id="fileInputFront" name="file" /></div>
+    <div class="caption">Front <input type="file" id="fileInputFront" name="fileInputFront" /></div>
   </div>
   <div class="inputoutput">
     <img id="imageSrcBack" alt="No Image" style="width: 200px; height: 200px;" />
-    <div class="caption">Back <input type="file" id="fileInputBack" name="file" /></div>
+    <div class="caption">Back <input type="file" id="fileInputBack" name="fileInputBack" /></div>
   </div>
   <div class="inputoutput">
     <img id="imageSrcLeft" alt="No Image" style="width: 200px; height: 200px;" />
-    <div class="caption">Left <input type="file" id="fileInputLeft" name="file" /></div>
+    <div class="caption">Left <input type="file" id="fileInputLeft" name="fileInputLeft" /></div>
   </div>
   <div class="inputoutput">
     <img id="imageSrcRight" alt="No Image" style="width: 200px; height: 200px;" />
-    <div class="caption">Right <input type="file" id="fileInputRight" name="file" /></div>
+    <div class="caption">Right <input type="file" id="fileInputRight" name="fileInputRight" /></div>
   </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<div id="return_update_msg"></div>
+<div class="post_submitting" style="display:none;"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+
 <script type="text/javascript">
   // Function to handle image file selection
   function handleFileSelect(event, imgElementId) {
@@ -93,6 +100,9 @@
         }
       });
     });
+
+
+
   });
 </script>
 {% endblock %}
