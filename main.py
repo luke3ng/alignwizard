@@ -65,7 +65,7 @@ def uploadImages():
 
 
     return render_template("uploadImages.html")
-@app.route("/get_Coordinates",methods=['POST'])
+@app.route("/get_coordinates",methods=['POST'])
 def get_coordinates():
     data = request.json
     x =data['x']

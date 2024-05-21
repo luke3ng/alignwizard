@@ -1,4 +1,3 @@
-<!-- templates/home.html -->
 {% extends "base.html" %}
 
 {% block title %}Home{% endblock %}
@@ -22,7 +21,7 @@
   }
 </style>
 
-<h2>Hello OpenCV.js</h2>
+<h2>Hello</h2>
 <div class="container">
   <div class="inputoutput">
     <img id="imageSrcFront" alt="No Image" style="width: 200px; height: 200px;" />
@@ -42,45 +41,58 @@
   </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script type="text/javascript">
-  document.getElementById("fileInputFront").addEventListener("change", (e) => {
-    document.getElementById("imageSrcFront").src = URL.createObjectURL(e.target.files[0]);
+  // Function to handle image file selection
+  function handleFileSelect(event, imgElementId) {
+    const file = event.target.files[0];
+    if (file) {
+      const fileType = file.type;
+      if (/^image\//.test(fileType)) {
+        document.getElementById(imgElementId).src = URL.createObjectURL(file);
+      } else {
+        console.error("Unsupported file type. Only images are supported.");
+      }
+    } else {
+      console.error("No file selected or file input is not supported.");
+    }
+  }
+
+  document.getElementById("fileInputFront").addEventListener("change", function(event) {
+    handleFileSelect(event, "imageSrcFront");
   }, false);
 
-  document.getElementById("fileInputBack").addEventListener("change", (e) => {
-    document.getElementById("imageSrcBack").src = URL.createObjectURL(e.target.files[0]);
+  document.getElementById("fileInputBack").addEventListener("change", function(event) {
+    handleFileSelect(event, "imageSrcBack");
   }, false);
 
-  document.getElementById("fileInputLeft").addEventListener("change", (e) => {
-    document.getElementById("imageSrcLeft").src = URL.createObjectURL(e.target.files[0]);
+  document.getElementById("fileInputLeft").addEventListener("change", function(event) {
+    handleFileSelect(event, "imageSrcLeft");
   }, false);
 
-  document.getElementById("fileInputRight").addEventListener("change", (e) => {
-    document.getElementById("imageSrcRight").src = URL.createObjectURL(e.target.files[0]);
+  document.getElementById("fileInputRight").addEventListener("change", function(event) {
+    handleFileSelect(event, "imageSrcRight");
   }, false);
-</script>
-<script>
-$(document).ready(function() {
-    $("#imageSrcFRont").on("click", function(event) {
-        var x = event.offsetX;
-        var y = event.offsetY;
 
-        // Send coordinates to Flask backend using AJAX
-        $.ajax({
-            type: "POST",
-            url: "/get_coordinates",
-            data: JSON.stringify({x: x, y: y}),
-            contentType: "application/json",
-            success: function(response) {
-                console.log(response);
-                // Handle success response if needed
-            },
-            error: function(error) {
-                console.error("Error:", error);
-                // Handle error if needed
-            }
-        });
+  $(document).ready(function() {
+    $("#imageSrcFront").on("click", function(event) {
+      var x = event.offsetX;
+      var y = event.offsetY;
+
+      // Send coordinates to Flask backend using AJAX
+      $.ajax({
+        type: "POST",
+        url: "/get_coordinates",
+        data: JSON.stringify({x: x, y: y}),
+        contentType: "application/json",
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(error) {
+          console.error("Error:", error);
+        }
+      });
     });
-});
+  });
 </script>
 {% endblock %}
