@@ -3,6 +3,10 @@ import cv2
 import numpy as np
 from werkzeug.utils import secure_filename
 import os
+import base64
+from io import BytesIO
+globalImages = {}
+
 
 app = Flask(__name__)
 
@@ -24,6 +28,14 @@ def drawCross(img, x, y):
     # Draw horizontal line
     for i in range(max(0, x - length // 2), min(img.shape[1], x + length // 2)):
         img[y, i] = [0, 0, 0]
+    return img
+def base64_to_image(base64_str):
+    # Decode base64 string to binary data
+    img_data = base64.b64decode(base64_str.split(',')[1])  # remove the `data:image/...` part
+    # Convert binary data to a NumPy array
+    np_arr = np.frombuffer(img_data, np.uint8)
+    # Decode NumPy array to an image
+    img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     return img
 
 @app.route("/")
@@ -81,16 +93,35 @@ def uploadImages():
 
 @app.route("/get_coordinatesFront", methods=['POST'])
 def get_coordinatesFront():
-    global imgFront  # Declare imgFront as global
+
     data = request.json
     x = data['xFront']
     y = data['yFront']
-    newImgFront = drawCross(imgFront,x,y)
+    drawCross(globalImages['imgFront'],x,y)
+
+
 
 
 
     print("Clicked coordinates: ({}, {})".format(x, y))
-    return (jsonify({"message": "Coordinates received successfully."})), newImgFront
+    return (jsonify({"message": "Coordinates received successfully."}))
+
+@app.route("/uploadFront", methods=['POST'])
+def uploadFront():
+    data = request.json
+    img_front_base64 = data['imgFront']
+    globalImages['imgFront'] = base64_to_image(img_front_base64)
+
+
+    # At this point, img_front is an OpenCV image object
+    # You can process the image as needed
+
+
+    return (jsonify({"message": "Front image received successfully."}))
+
+
+
+
 
 @app.route("/get_coordinatesBack", methods=['POST'])
 def get_coordinatesBack():
