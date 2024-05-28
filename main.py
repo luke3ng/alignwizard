@@ -4,7 +4,6 @@ import numpy as np
 from werkzeug.utils import secure_filename
 import os
 
-
 app = Flask(__name__)
 
 # Configure upload folder
@@ -12,6 +11,20 @@ UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Global variable to hold the image
+global imgFront
+
+def drawCross(img, x, y):
+    length = 200
+    # Draw vertical line
+    for i in range(max(0, y - length // 2), min(img.shape[0], y + length // 2)):
+        img[i, x] = [0, 0, 0]
+
+    # Draw horizontal line
+    for i in range(max(0, x - length // 2), min(img.shape[1], x + length // 2)):
+        img[y, i] = [0, 0, 0]
+    return img
 
 @app.route("/")
 def home():
@@ -23,6 +36,7 @@ def loginPage():
 
 @app.route("/uploadImages", methods=['GET', 'POST'])
 def uploadImages():
+    global imgFront  # Declare imgFront as global
     if request.method == 'POST':
         # Retrieve files from form
         fileFront = request.files.get('fileInputFront')
@@ -63,16 +77,50 @@ def uploadImages():
             if imgRight is None:
                 return "Error: Unable to read uploaded right image."
 
-
     return render_template("uploadImages.html")
-@app.route("/get_coordinates",methods=['POST'])
-def get_coordinates():
+
+@app.route("/get_coordinatesFront", methods=['POST'])
+def get_coordinatesFront():
+    global imgFront  # Declare imgFront as global
     data = request.json
-    x =data['x']
-    y = data['y']
+    x = data['xFront']
+    y = data['yFront']
+    newImgFront = drawCross(imgFront,x,y)
+
+
+
+    print("Clicked coordinates: ({}, {})".format(x, y))
+    return (jsonify({"message": "Coordinates received successfully."})), newImgFront
+
+@app.route("/get_coordinatesBack", methods=['POST'])
+def get_coordinatesBack():
+    global imgBack  # Declare imgFront as global
+    data = request.json
+    x = data['xBack']
+    y = data['yBack']
+
     print("Clicked coordinates: ({}, {})".format(x, y))
     return jsonify({"message": "Coordinates received successfully."})
 
+@app.route("/get_coordinatesLeft", methods=['POST'])
+def get_coordinatesLeft():
+    global imgLeft  # Declare imgFront as global
+    data = request.json
+    x = data['xLeft']
+    y = data['yLeft']
+
+    print("Clicked coordinates: ({}, {})".format(x, y))
+    return jsonify({"message": "Coordinates received successfully."})
+
+@app.route("/get_coordinatesRight", methods=['POST'])
+def get_coordinatesRight():
+    global imgRight  # Declare imgFront as global
+    data = request.json
+    x = data['xRight']
+    y = data['yRight']
+
+    print("Clicked coordinates: ({}, {})".format(x, y))
+    return jsonify({"message": "Coordinates received successfully."})
 
 if __name__ == '__main__':
     app.run(debug=True)

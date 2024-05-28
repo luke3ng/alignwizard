@@ -26,6 +26,7 @@
   <div class="inputoutput">
     <img id="imageSrcFront" alt="No Image" style="width: 200px; height: 200px;" />
     <div class="caption">Front <input type="file" id="fileInputFront" name="fileInputFront" /></div>
+    <button id="addLinesFront" type="button"  class="button">Add lines</button>
   </div>
   <div class="inputoutput">
     <img id="imageSrcBack" alt="No Image" style="width: 200px; height: 200px;" />
@@ -41,13 +42,29 @@
   </div>
 </div>
 
-
-
 <div id="return_update_msg"></div>
 <div class="post_submitting" style="display:none;"></div>
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script type = "text/javascript">
+  //addLines button
+  let modeFront = false;
+  function toggleFront() {
+    modeFront = true;
+    if (modeFront) {
+      // Add a class to the image to visually indicate the mode is active
+      $("#imageSrcFront").addClass("clickable");
+    } else {
+      // Remove the class when mode is disabled
+      $("#imageSrcFront").removeClass("clickable");
+    }
+  }
 
+  // Event listener for the toggle mode button
+  $("#addLinesFront").click(function() {
+    toggleFront();
+  });
+</script>
 
 <script type="text/javascript">
   // Function to handle image file selection
@@ -83,14 +100,16 @@
 
   $(document).ready(function() {
     $("#imageSrcFront").on("click", function(event) {
-      var x = event.offsetX;
-      var y = event.offsetY;
+      var xFront = event.offsetX;
+      var yFront = event.offsetY;
+      var imgFront = document.getElementById("imageSrcFront")
+
 
       // Send coordinates to Flask backend using AJAX
       $.ajax({
         type: "POST",
-        url: "/get_coordinates",
-        data: JSON.stringify({x: x, y: y}),
+        url: "/get_coordinatesFront",
+        data: JSON.stringify({xFront: xFront, yFront: yFront,imgFront: imgFront}),
         contentType: "application/json",
         success: function(response) {
           console.log(response);
@@ -101,8 +120,66 @@
       });
     });
 
+    $("#imageSrcBack").on("click", function(event) {
+      var xBack = event.offsetX;
+      var yBack = event.offsetY;
+      var groot = document.getElementById("groot")
+
+      // Send coordinates to Flask backend using AJAX
+      $.ajax({
+        type: "POST",
+        url: "/get_coordinatesBack",
+        data: JSON.stringify({xBack: xBack, yBack: yBack}),
+        contentType: "application/json",
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(error) {
+          console.error("Error:", error);
+        }
+      });
+    });
+
+    $("#imageSrcLeft").on("click", function(event) {
+      var xLeft = event.offsetX;
+      var yLeft = event.offsetY;
 
 
+      // Send coordinates to Flask backend using AJAX
+      $.ajax({
+        type: "POST",
+        url: "/get_coordinatesLeft",
+        data: JSON.stringify({xLeft: xLeft, yLeft: yLeft}),
+        contentType: "application/json",
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(error) {
+          console.error("Error:", error);
+        }
+      });
+    });
+
+    $("#imageSrcRight").on("click", function(event) {
+      var xRight = event.offsetX;
+      var yRight = event.offsetY;
+
+      // Send coordinates to Flask backend using AJAX
+      $.ajax({
+        type: "POST",
+        url: "/get_coordinatesRight",
+        data: JSON.stringify({xRight: xRight, yRight: yRight}),
+        contentType: "application/json",
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(error) {
+          console.error("Error:", error);
+        }
+      });
+    });
   });
+
 </script>
 {% endblock %}
+
