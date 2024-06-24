@@ -1,222 +1,147 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        .inputoutput {
+            border: 2px solid black;
+            margin: 10px;
+            padding: 10px;
+            display: inline-block;
+            text-align: center;
+        }
+        .caption {
+            margin-top: 10px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .clickable {
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+    <h2>Hello</h2>
+    <div class="container">
+        <div class="inputoutput">
+            <img id="imageSrcFront" alt="No Image" style="width: 600px; height: 600px;" />
+            <div class="caption">Front <input type="file" id="fileInputFront" name="fileInputFront" /></div>
+            <button id="addLinesFront" type="button" class="button">Add lines</button>
+        </div>
+        <div class="inputoutput">
+            <img id="imageSrcBack" alt="No Image" style="width: 600px; height: 600px;" />
+            <div class="caption">Back <input type="file" id="fileInputBack" name="fileInputBack" /></div>
+        </div>
+        <div class="inputoutput">
+            <img id="imageSrcLeft" alt="No Image" style="width: 600px; height: 600px;" />
+            <div class="caption">Left <input type="file" id="fileInputLeft" name="fileInputLeft" /></div>
+        </div>
+        <div class="inputoutput">
+            <img id="imageSrcRight" alt="No Image" style="width: 600px; height: 600px;" />
+            <div class="caption">Right <input type="file" id="fileInputRight" name="fileInputRight" /></div>
+        </div>
+    </div>
 
-{% block title %}Home{% endblock %}
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            let modeFront = false;
 
-{% block content %}
-<style>
-  .inputoutput {
-    border: 2px solid black;
-    margin: 10px;
-    padding: 10px;
-    display: inline-block;
-    text-align: center;
-  }
-  .caption {
-    margin-top: 10px;
-  }
-  .container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-  }
-</style>
+            function toggleFront() {
+                modeFront = !modeFront;
+                if (modeFront) {
+                    $("#imageSrcFront").addClass("clickable");
+                } else {
+                    $("#imageSrcFront").removeClass("clickable");
+                }
+            }
 
-<h2>Hello</h2>
-<div class="container">
-  <div class="inputoutput">
-    <img id="imageSrcFront" alt="No Image" style="width: 200px; height: 200px;" />
-    <div class="caption">Front <input type="file" id="fileInputFront" name="fileInputFront" /></div>
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-<script type="text/javascript">
-$(document).ready(function() {
-    $("#fileInputFront").on("change", function(event) {
-        var file = event.target.files[0];
-        var reader = new FileReader();
+            $("#addLinesFront").click(function() {
+                toggleFront();
+            });
 
-        reader.onload = function(event) {
-            var imgData = event.target.result;
-
-            // Send image data to Flask backend using AJAX
-            $.ajax({
-                type: "POST",
-                url: "/uploadFront",
-                data: JSON.stringify({ imgFront: imgData }),
-                contentType: "application/json",
-                success: function(response) {
-                    console.log(response);
-                    // If the backend returns a new image URL, update the image source
-                    if (response.image_url) {
-                        $("#imageSrcFront").attr("src", response.image_url);
+            function handleFileSelect(event, imgElementId) {
+                const file = event.target.files[0];
+                if (file) {
+                    const fileType = file.type;
+                    if (/^image\//.test(fileType)) {
+                        document.getElementById(imgElementId).src = URL.createObjectURL(file);
+                    } else {
+                        console.error("Unsupported file type. Only images are supported.");
                     }
-                },
-                error: function(error) {
-                    console.error("Error:", error);
+                } else {
+                    console.error("No file selected or file input is not supported.");
+                }
+            }
+
+            $("#fileInputFront").on("change", function(event) {
+                handleFileSelect(event, "imageSrcFront");
+                var file = event.target.files[0];
+                var reader = new FileReader();
+
+                reader.onload = function(event) {
+                    var imgData = event.target.result;
+
+                    $.ajax({
+                        type: "POST",
+                        url: "/uploadFront",
+                        data: JSON.stringify({ imgFront: imgData }),
+                        contentType: "application/json",
+                        success: function(response) {
+                            console.log(response);
+                        },
+                        error: function(error) {
+                            console.error("Error:", error);
+                        }
+                    });
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            $("#imageSrcFront").on("click", function(event) {
+                if (modeFront) {
+                    var xFront = event.offsetX;
+                    var yFront = event.offsetY;
+
+                    $.ajax({
+                        type: "POST",
+                        url: "/get_coordinatesFront",
+                        data: JSON.stringify({ xFront: xFront, yFront: yFront }),
+                        contentType: "application/json",
+                        success: function(response) {
+                            console.log(response);
+                            if (response.image) {
+                                $("#imageSrcFront").attr("src", "data:image/png;base64," + response.image);
+                            }
+                        },
+                        error: function(error) {
+                            console.error("Error:", error);
+                        }
+                    });
                 }
             });
-        };
 
-        // Read the uploaded image file as a data URL
-        reader.readAsDataURL(file);
-    });
-});
+            $("#fileInputBack").on("change", function(event) {
+                handleFileSelect(event, "imageSrcBack");
+            });
 
-</script>
+            $("#fileInputLeft").on("change", function(event) {
+                handleFileSelect(event, "imageSrcLeft");
+            });
 
-
-    <button id="addLinesFront" type="button" class="button">Add lines</button>
-  </div>
-  <div class="inputoutput">
-    <img id="imageSrcBack" alt="No Image" style="width: 200px; height: 200px;" />
-    <div class="caption">Back <input type="file" id="fileInputBack" name="fileInputBack" /></div>
-  </div>
-  <div class="inputoutput">
-    <img id="imageSrcLeft" alt="No Image" style="width: 200px; height: 200px;" />
-    <div class="caption">Left <input type="file" id="fileInputLeft" name="fileInputLeft" /></div>
-  </div>
-  <div class="inputoutput">
-    <img id="imageSrcRight" alt="No Image" style="width: 200px; height: 200px;" />
-    <div class="caption">Right <input type="file" id="fileInputRight" name="fileInputRight" /></div>
-  </div>
-</div>
-
-<div id="return_update_msg"></div>
-<div class="post_submitting" style="display:none;"></div>
-
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-<script type="text/javascript">
-  // Add lines button
-  let modeFront = false;
-  function toggleFront() {
-    modeFront = !modeFront; // Toggle modeFront
-    if (modeFront) {
-      // Add a class to the image to visually indicate the mode is active
-      $("#imageSrcFront").addClass("clickable");
-    } else {
-      // Remove the class when mode is disabled
-      $("#imageSrcFront").removeClass("clickable");
-    }
-  }
-
-  // Event listener for the toggle mode button
-  $("#addLinesFront").click(function() {
-    toggleFront();
-  });
-
-  // Function to handle image file selection
-  function handleFileSelect(event, imgElementId) {
-    const file = event.target.files[0];
-    if (file) {
-      const fileType = file.type;
-      if (/^image\//.test(fileType)) {
-        document.getElementById(imgElementId).src = URL.createObjectURL(file);
-      } else {
-        console.error("Unsupported file type. Only images are supported.");
-      }
-    } else {
-      console.error("No file selected or file input is not supported.");
-    }
-  }
-
-  document.getElementById("fileInputFront").addEventListener("change", function(event) {
-    handleFileSelect(event, "imageSrcFront");
-  }, false);
-
-  document.getElementById("fileInputBack").addEventListener("change", function(event) {
-    handleFileSelect(event, "imageSrcBack");
-  }, false);
-
-  document.getElementById("fileInputLeft").addEventListener("change", function(event) {
-    handleFileSelect(event, "imageSrcLeft");
-  }, false);
-
-  document.getElementById("fileInputRight").addEventListener("change", function(event) {
-    handleFileSelect(event, "imageSrcRight");
-  }, false);
-
-  $(document).ready(function() {
-    $("#imageSrcFront").on("click", function(event) {
-      if (modeFront) {
-        var xFront = event.offsetX;
-        var yFront = event.offsetY;
-
-        // Send coordinates to Flask backend using AJAX
-        $.ajax({
-          type: "POST",
-          url: "/get_coordinatesFront",
-          data: JSON.stringify({ xFront: xFront, yFront: yFront }),
-          contentType: "application/json",
-          success: function(response) {
-            console.log(response);
-            // If the backend returns a new image URL, update the image source
-            if (response.image_url) {
-              document.getElementById("imageSrcFront").src = response.image_url;
-            }
-          },
-          error: function(error) {
-            console.error("Error:", error);
-          }
+            $("#fileInputRight").on("change", function(event) {
+                handleFileSelect(event, "imageSrcRight");
+            });
         });
-      }
-    });
+    </script>
+</body>
+</html>
 
-    $("#imageSrcBack").on("click", function(event) {
-      var xBack = event.offsetX;
-      var yBack = event.offsetY;
-
-      // Send coordinates to Flask backend using AJAX
-      $.ajax({
-        type: "POST",
-        url: "/get_coordinatesBack",
-        data: JSON.stringify({ xBack: xBack, yBack: yBack }),
-        contentType: "application/json",
-        success: function(response) {
-          console.log(response);
-        },
-        error: function(error) {
-          console.error("Error:", error);
-        }
-      });
-    });
-
-    $("#imageSrcLeft").on("click", function(event) {
-      var xLeft = event.offsetX;
-      var yLeft = event.offsetY;
-
-      // Send coordinates to Flask backend using AJAX
-      $.ajax({
-        type: "POST",
-        url: "/get_coordinatesLeft",
-        data: JSON.stringify({ xLeft: xLeft, yLeft: yLeft }),
-        contentType: "application/json",
-        success: function(response) {
-          console.log(response);
-        },
-        error: function(error) {
-          console.error("Error:", error);
-        }
-      });
-    });
-
-    $("#imageSrcRight").on("click", function(event) {
-      var xRight = event.offsetX;
-      var yRight = event.offsetY;
-
-      // Send coordinates to Flask backend using AJAX
-      $.ajax({
-        type: "POST",
-        url: "/get_coordinatesRight",
-        data: JSON.stringify({ xRight: xRight, yRight: yRight }),
-        contentType: "application/json",
-        success: function(response) {
-          console.log(response);
-        },
-        error: function(error) {
-          console.error("Error:", error);
-        }
-      });
-    });
-  });
-</script>
-{% endblock %}
 
 

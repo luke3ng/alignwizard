@@ -4,11 +4,10 @@ import numpy as np
 from werkzeug.utils import secure_filename
 import os
 import base64
-from io import BytesIO
-globalImages = {}
-
 
 app = Flask(__name__)
+
+globalImages = {}
 
 # Configure upload folder
 UPLOAD_FOLDER = 'uploads'
@@ -16,27 +15,45 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Global variable to hold the image
-global imgFront
+def scale_coordinates(x, y, display_width, display_height, actual_width, actual_height):
+    scaled_x = int(x * actual_width / display_width)
+    scaled_y = int(y * actual_height / display_height)
+    return scaled_x, scaled_y
 
 def drawCross(img, x, y):
-    length = 200
-    # Draw vertical line
-    for i in range(max(0, y - length // 2), min(img.shape[0], y + length // 2)):
-        img[i, x] = [0, 0, 0]
+    h, w, _ = img.shape
 
-    # Draw horizontal line
-    for i in range(max(0, x - length // 2), min(img.shape[1], x + length // 2)):
-        img[y, i] = [0, 0, 0]
+    # These should be the dimensions of the image as displayed in the HTML
+    display_width = 600
+    display_height = 600
+
+    x, y = scale_coordinates(x, y, display_width, display_height, w, h)  # Swap h and w here
+
+    print("Image dimensions: height =", h, "width =", w)
+    print("Scaled coordinates: x =", x, "y =", y)
+
+    # Ensure x and y are within bounds
+    x = max(0, min(w - 1, x))
+    y = max(0, min(h - 1, y))
+
+    # Draw vertical line from top to bottom
+    cv2.line(img, (x, 0), (x, h - 1), (0, 0, 0), 5)
+
+    # Draw horizontal line from left to right
+    cv2.line(img, (0, y), (w - 1, y), (0, 0, 0), 5)
+
     return img
+
 def base64_to_image(base64_str):
-    # Decode base64 string to binary data
     img_data = base64.b64decode(base64_str.split(',')[1])  # remove the `data:image/...` part
-    # Convert binary data to a NumPy array
     np_arr = np.frombuffer(img_data, np.uint8)
-    # Decode NumPy array to an image
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     return img
+
+def image_to_base64(image):
+    _, buffer = cv2.imencode('.png', image)
+    base64_image = base64.b64encode(buffer).decode('utf-8')
+    return base64_image
 
 @app.route("/")
 def home():
@@ -48,15 +65,12 @@ def loginPage():
 
 @app.route("/uploadImages", methods=['GET', 'POST'])
 def uploadImages():
-    global imgFront  # Declare imgFront as global
     if request.method == 'POST':
-        # Retrieve files from form
         fileFront = request.files.get('fileInputFront')
         fileBack = request.files.get('fileInputBack')
         fileLeft = request.files.get('fileInputLeft')
         fileRight = request.files.get('fileInputRight')
 
-        # Save the uploaded files to the upload folder and read them with OpenCV
         if fileFront:
             filenameFront = secure_filename(fileFront.filename)
             filepathFront = os.path.join(app.config['UPLOAD_FOLDER'], filenameFront)
@@ -64,6 +78,7 @@ def uploadImages():
             imgFront = cv2.imread(filepathFront)
             if imgFront is None:
                 return "Error: Unable to read uploaded front image."
+            globalImages['imgFront'] = imgFront  # Save the original image
 
         if fileBack:
             filenameBack = secure_filename(fileBack.filename)
@@ -72,6 +87,7 @@ def uploadImages():
             imgBack = cv2.imread(filepathBack)
             if imgBack is None:
                 return "Error: Unable to read uploaded back image."
+            globalImages['imgBack'] = imgBack  # Save the original image
 
         if fileLeft:
             filenameLeft = secure_filename(fileLeft.filename)
@@ -80,6 +96,7 @@ def uploadImages():
             imgLeft = cv2.imread(filepathLeft)
             if imgLeft is None:
                 return "Error: Unable to read uploaded left image."
+            globalImages['imgLeft'] = imgLeft  # Save the original image
 
         if fileRight:
             filenameRight = secure_filename(fileRight.filename)
@@ -88,23 +105,23 @@ def uploadImages():
             imgRight = cv2.imread(filepathRight)
             if imgRight is None:
                 return "Error: Unable to read uploaded right image."
+            globalImages['imgRight'] = imgRight  # Save the original image
 
     return render_template("uploadImages.html")
 
 @app.route("/get_coordinatesFront", methods=['POST'])
 def get_coordinatesFront():
-
     data = request.json
     x = data['xFront']
     y = data['yFront']
-    drawCross(globalImages['imgFront'],x,y)
+    print(x, y)
 
+    # Use a copy of the original image to draw the cross
+    img_copy = globalImages['imgFront'].copy()
+    processed_image = drawCross(img_copy, x, y)
+    base64_image = image_to_base64(processed_image)
 
-
-
-
-    print("Clicked coordinates: ({}, {})".format(x, y))
-    return (jsonify({"message": "Coordinates received successfully."}))
+    return jsonify({"message": "Coordinates received successfully.", "image": base64_image})
 
 @app.route("/uploadFront", methods=['POST'])
 def uploadFront():
@@ -112,20 +129,10 @@ def uploadFront():
     img_front_base64 = data['imgFront']
     globalImages['imgFront'] = base64_to_image(img_front_base64)
 
-
-    # At this point, img_front is an OpenCV image object
-    # You can process the image as needed
-
-
-    return (jsonify({"message": "Front image received successfully."}))
-
-
-
-
+    return jsonify({"message": "Front image received successfully."})
 
 @app.route("/get_coordinatesBack", methods=['POST'])
 def get_coordinatesBack():
-    global imgBack  # Declare imgFront as global
     data = request.json
     x = data['xBack']
     y = data['yBack']
@@ -135,7 +142,6 @@ def get_coordinatesBack():
 
 @app.route("/get_coordinatesLeft", methods=['POST'])
 def get_coordinatesLeft():
-    global imgLeft  # Declare imgFront as global
     data = request.json
     x = data['xLeft']
     y = data['yLeft']
@@ -145,7 +151,6 @@ def get_coordinatesLeft():
 
 @app.route("/get_coordinatesRight", methods=['POST'])
 def get_coordinatesRight():
-    global imgRight  # Declare imgFront as global
     data = request.json
     x = data['xRight']
     y = data['yRight']
@@ -155,3 +160,4 @@ def get_coordinatesRight():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
