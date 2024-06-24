@@ -29,43 +29,47 @@
     <h2>Hello</h2>
     <div class="container">
         <div class="inputoutput">
-            <img id="imageSrcFront" alt="No Image" style="width: 600px; height: 600px;" />
+            <img id="imageSrcFront" alt="No Image" style="width: 250px; height: 500px;" />
             <div class="caption">Front <input type="file" id="fileInputFront" name="fileInputFront" /></div>
             <button id="addLinesFront" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <img id="imageSrcBack" alt="No Image" style="width: 600px; height: 600px;" />
+            <img id="imageSrcBack" alt="No Image" style="width: 250px; height: 500px;" />
             <div class="caption">Back <input type="file" id="fileInputBack" name="fileInputBack" /></div>
+            <button id="addLinesBack" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <img id="imageSrcLeft" alt="No Image" style="width: 600px; height: 600px;" />
+            <img id="imageSrcLeft" alt="No Image" style="width: 250px; height: 500px;" />
             <div class="caption">Left <input type="file" id="fileInputLeft" name="fileInputLeft" /></div>
+            <button id="addLinesLeft" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <img id="imageSrcRight" alt="No Image" style="width: 600px; height: 600px;" />
+            <img id="imageSrcRight" alt="No Image" style="width: 250px; height: 500px;" />
             <div class="caption">Right <input type="file" id="fileInputRight" name="fileInputRight" /></div>
+            <button id="addLinesRight" type="button" class="button">Add lines</button>
         </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            let modeFront = false;
+            let modes = {
+                Front: false,
+                Back: false,
+                Left: false,
+                Right: false
+            };
 
-            function toggleFront() {
-                modeFront = !modeFront;
-                if (modeFront) {
-                    $("#imageSrcFront").addClass("clickable");
+            function toggleMode(side) {
+                modes[side] = !modes[side];
+                if (modes[side]) {
+                    $("#imageSrc" + side).addClass("clickable");
                 } else {
-                    $("#imageSrcFront").removeClass("clickable");
+                    $("#imageSrc" + side).removeClass("clickable");
                 }
             }
 
-            $("#addLinesFront").click(function() {
-                toggleFront();
-            });
-
-            function handleFileSelect(event, imgElementId) {
+            function handleFileSelect(event, imgElementId, side) {
                 const file = event.target.files[0];
                 if (file) {
                     const fileType = file.type;
@@ -77,20 +81,14 @@
                 } else {
                     console.error("No file selected or file input is not supported.");
                 }
-            }
 
-            $("#fileInputFront").on("change", function(event) {
-                handleFileSelect(event, "imageSrcFront");
-                var file = event.target.files[0];
-                var reader = new FileReader();
-
+                const reader = new FileReader();
                 reader.onload = function(event) {
-                    var imgData = event.target.result;
-
+                    const imgData = event.target.result;
                     $.ajax({
                         type: "POST",
-                        url: "/uploadFront",
-                        data: JSON.stringify({ imgFront: imgData }),
+                        url: "/upload" + side,
+                        data: JSON.stringify({ ["img" + side]: imgData }),
                         contentType: "application/json",
                         success: function(response) {
                             console.log(response);
@@ -100,43 +98,39 @@
                         }
                     });
                 };
-
                 reader.readAsDataURL(file);
-            });
+            }
 
-            $("#imageSrcFront").on("click", function(event) {
-                if (modeFront) {
-                    var xFront = event.offsetX;
-                    var yFront = event.offsetY;
+            ["Front", "Back", "Left", "Right"].forEach(function(side) {
+                $("#addLines" + side).click(function() {
+                    toggleMode(side);
+                });
 
-                    $.ajax({
-                        type: "POST",
-                        url: "/get_coordinatesFront",
-                        data: JSON.stringify({ xFront: xFront, yFront: yFront }),
-                        contentType: "application/json",
-                        success: function(response) {
-                            console.log(response);
-                            if (response.image) {
-                                $("#imageSrcFront").attr("src", "data:image/png;base64," + response.image);
+                $("#fileInput" + side).on("change", function(event) {
+                    handleFileSelect(event, "imageSrc" + side, side);
+                });
+
+                $("#imageSrc" + side).on("click", function(event) {
+                    if (modes[side]) {
+                        const x = event.offsetX;
+                        const y = event.offsetY;
+                        $.ajax({
+                            type: "POST",
+                            url: "/get_coordinates" + side,
+                            data: JSON.stringify({ ["x" + side]: x, ["y" + side]: y }),
+                            contentType: "application/json",
+                            success: function(response) {
+                                console.log(response);
+                                if (response.image) {
+                                    $("#imageSrc" + side).attr("src", "data:image/png;base64," + response.image);
+                                }
+                            },
+                            error: function(error) {
+                                console.error("Error:", error);
                             }
-                        },
-                        error: function(error) {
-                            console.error("Error:", error);
-                        }
-                    });
-                }
-            });
-
-            $("#fileInputBack").on("change", function(event) {
-                handleFileSelect(event, "imageSrcBack");
-            });
-
-            $("#fileInputLeft").on("change", function(event) {
-                handleFileSelect(event, "imageSrcLeft");
-            });
-
-            $("#fileInputRight").on("change", function(event) {
-                handleFileSelect(event, "imageSrcRight");
+                        });
+                    }
+                });
             });
         });
     </script>
