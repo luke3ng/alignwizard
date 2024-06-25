@@ -9,6 +9,7 @@ from io import BytesIO
 app = Flask(__name__)
 
 globalImages = {}
+savedImages = {}
 
 # Configure upload folder
 UPLOAD_FOLDER = 'uploads'
@@ -110,7 +111,9 @@ def get_coordinatesFront():
 
     img_copy = globalImages['imgFront'].copy()
     processed_image = drawCross(img_copy, x, y)
+    savedImages["front"]= processed_image
     base64_image = image_to_base64(processed_image)
+
 
     return jsonify({"message": "Coordinates received successfully.", "image": base64_image})
 
@@ -130,6 +133,7 @@ def get_coordinatesBack():
 
     img_copy = globalImages['imgBack'].copy()
     processed_image = drawCross(img_copy, x, y)
+    savedImages["back"]= processed_image
     base64_image = image_to_base64(processed_image)
 
     return jsonify({"message": "Coordinates received successfully.", "image": base64_image})
@@ -150,6 +154,7 @@ def get_coordinatesLeft():
 
     img_copy = globalImages['imgLeft'].copy()
     processed_image = drawCross(img_copy, x, y)
+    savedImages["left"]= processed_image
     base64_image = image_to_base64(processed_image)
 
     return jsonify({"message": "Coordinates received successfully.", "image": base64_image})
@@ -169,7 +174,9 @@ def get_coordinatesRight():
     y = data['yRight']
 
     img_copy = globalImages['imgRight'].copy()
+
     processed_image = drawCross(img_copy, x, y)
+    savedImages["right"]= processed_image
     base64_image = image_to_base64(processed_image)
 
     return jsonify({"message": "Coordinates received successfully.", "image": base64_image})
@@ -181,6 +188,9 @@ def uploadRight():
     globalImages['imgRight'] = base64_to_image(img_right_base64)
 
     return jsonify({"message": "Right image received successfully."})
+
+@app.route("/saveImages")
+def saveImages():
 
 if __name__ == '__main__':
     app.run(debug=True)
