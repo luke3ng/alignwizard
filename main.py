@@ -56,6 +56,13 @@ def home():
 @app.route("/login")
 def loginPage():
     return render_template("login.html")
+@app.route("/getUser", methods=['POST'])
+def getUser():
+    data = request.json
+    username = data['username']
+    password = data['password']
+
+
 
 @app.route("/uploadImages", methods=['GET', 'POST'])
 def uploadImages():
@@ -189,8 +196,6 @@ def uploadRight():
 
     return jsonify({"message": "Right image received successfully."})
 
-@app.route("/saveImages")
-def saveImages():
 
 if __name__ == '__main__':
     app.run(debug=True)
