@@ -5,9 +5,14 @@ from werkzeug.utils import secure_filename
 import os
 import base64
 from io import BytesIO
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-
+app.config['Secret Key']= "myKey"
+app.config['SQLAlCHEMY_DATABASE_URI']='myuser:password@localhost/users'
+db = SQLAlchemy(app)
 globalImages = {}
 savedImages = {}
 
