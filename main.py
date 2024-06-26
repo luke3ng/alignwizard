@@ -8,11 +8,41 @@ from io import BytesIO
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+from datetime import datetime
+
+
+
 
 app = Flask(__name__)
-app.config['Secret Key']= "myKey"
-app.config['SQLAlCHEMY_DATABASE_URI']='myuser:password@localhost/users'
+app.config['SECRET_KEY']= "myKey"
+app.config['SQLALCHEMY_DATABASE_URI']='postgresql://myuser:password@localhost/Users'
 db = SQLAlchemy(app)
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(150), nullable=False)
+
+    # Relationship to link User to their Patients
+    patients = db.relationship('Patient', backref='user', lazy=True)
+
+class Patient(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    patient_name = db.Column(db.String(150), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # Relationship to link Patient to their Images
+    images = db.relationship('Image', backref='patient', lazy=True)
+
+class Image(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    image_front = db.Column(db.String(20))
+    image_back = db.Column(db.String(20))
+    image_left = db.Column(db.String(20))
+    image_right = db.Column(db.String(20))
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+
 globalImages = {}
 savedImages = {}
 
@@ -203,5 +233,7 @@ def uploadRight():
 
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
 
