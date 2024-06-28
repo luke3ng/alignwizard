@@ -16,7 +16,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY']= "myKey"
-app.config['SQLALCHEMY_DATABASE_URI']='postgresql://myuser:password@localhost/Users'
+app.config['SQLALCHEMY_DATABASE_URI']='postgresql://postgres:password@localhost/postgres'
 db = SQLAlchemy(app)
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -96,6 +96,10 @@ def getUser():
     data = request.json
     username = data['username']
     password = data['password']
+    print(username)
+    print(password)
+    return jsonify({"message": "current user recieved"})
+
 
 
 

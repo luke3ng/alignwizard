@@ -8,10 +8,32 @@
   <h2>Login</h2>
 
   <div class="form">
-    <input type="text" placeholder="Username" name="un" />
-    <input type="password" placeholder="Password" name="pw" />
-    <button> Sign in </button>
-    <a href="#"> <p> Don't have an account? Register </p></a>
+    <input type="text" id="un" placeholder="Username" name="un" />
+    <input type="password" id="pw" placeholder="Password" name="pw" />
+    <button id="sign-in">Sign in</button>
+    <a href="#"> <p>Don't have an account? Register</p></a>
   </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("#sign-in").on("click", function(event) {
+            event.preventDefault(); // Prevent default form submission behavior
+            const username = document.getElementById('un').value;
+            const password = document.getElementById('pw').value;
+            $.ajax({
+                type: "POST",
+                url: "/getUser",
+                data: JSON.stringify({ username: username, password: password }),
+                contentType: "application/json",
+                success: function(response) {
+                    console.log(response);
+                },
+                error: function(error) {
+                    console.error("Error:", error);
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
