@@ -21,7 +21,7 @@ db = SQLAlchemy(app)
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(150), nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
 
     # Relationship to link User to their Patients
     patients = db.relationship('Patient', backref='user', lazy=True)
@@ -42,6 +42,17 @@ class Image(db.Model):
     image_left = db.Column(db.String(20))
     image_right = db.Column(db.String(20))
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+def addUser(username, password):
+    password_hash = generate_password_hash(password)
+    new_user = User(username=username, password_hash=password_hash)
+    db.session.add(new_user)
+    db.session.commit()
+    print(f"User {username} added successfully!")
+def addPatient(username, userID):
+    new_patient = User(username=username, user_id=userID)
+    db.session.add(new_patient)
+    db.session.commit()
+    print(f"User {username} added successfully!")
 
 globalImages = {}
 savedImages = {}
@@ -110,6 +121,8 @@ def createUser():
     password = data['password']
     print(username)
     print(password)
+    addUser(username,password)
+
     return jsonify({"message": "new user recieved"})
 
 
