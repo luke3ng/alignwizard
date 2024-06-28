@@ -91,6 +91,9 @@ def home():
 @app.route("/login")
 def loginPage():
     return render_template("login.html")
+@app.route("/signUp")
+def signUp():
+    return render_template("signUp.html")
 @app.route("/getUser", methods=['POST'])
 def getUser():
     data = request.json
@@ -99,6 +102,15 @@ def getUser():
     print(username)
     print(password)
     return jsonify({"message": "current user recieved"})
+
+@app.route("/createUser", methods=['POST'])
+def createUser():
+    data = request.json
+    username = data['username']
+    password = data['password']
+    print(username)
+    print(password)
+    return jsonify({"message": "new user recieved"})
 
 
 
