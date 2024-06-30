@@ -43,10 +43,10 @@ class Patient(db.Model):
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    image_front = db.Column(db.String(20))
-    image_back = db.Column(db.String(20))
-    image_left = db.Column(db.String(20))
-    image_right = db.Column(db.String(20))
+    image_front = db.Column(db.LargeBinary)
+    image_back = db.Column(db.LargeBinary)
+    image_left = db.Column(db.LargeBinary)
+    image_right = db.Column(db.LargeBinary)
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
 def addUser(username, password):
     password_hash = generate_password_hash(password)
@@ -54,11 +54,11 @@ def addUser(username, password):
     db.session.add(new_user)
     db.session.commit()
     print(f"User {username} added successfully!")
-def addPatient(username, userID):
-    new_patient = User(username=username, user_id=userID)
+def addPatient(patientName, userID):
+    new_patient = Patient(patient_name=patientName, user_id=userID)
     db.session.add(new_patient)
     db.session.commit()
-    print(f"User {username} added successfully!")
+    print(f"User {patientName} added successfully!")
 
 globalImages = {}
 savedImages = {}
@@ -122,6 +122,12 @@ def loginPage():
 @app.route("/signUp")
 def signUp():
     return render_template("signUp.html")
+@app.route("/findPatient")
+def findPatient():
+    return render_template("findPatient.html")
+@app.route("/enterNewPatient")
+def enterNewPatient():
+    return render_template("enterNewPatient.html")
 @app.route("/getUser", methods=['POST'])
 def getUser():
     data = request.json
@@ -158,6 +164,15 @@ def createUser():
 
     return jsonify({"message": "new user recieved"})
 
+@app.route("/createPatient", methods=['POST'])
+def createPatient():
+    data = request.json
+    patientName = data['patient']
+    print(patientName)
+
+    addPatient(patientName,current_user.id)
+
+    return jsonify({"message": "new user recieved"})
 
 
 

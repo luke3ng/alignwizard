@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<Div>
+  <h1>enter new patient</h1>
+</Div>
+<Div>
+     <a href="/findPatient" class="btn">Choose Existing Patient</a>
+</Div>
+
+<div class="form">
+    <input type="text" id="patient" placeholder="Full Name"/>
+    <button id="savePatient">Save</button>
+    <script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("savePatient").addEventListener("click", function(event) {
+        event.preventDefault(); // Prevent default form submission behavior
+
+        const patient = document.getElementById('patient').value;
+
+
+        fetch("/createPatient", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ patient:patient})
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = "/uploadImages"; // Redirect to home page on success
+            } else {
+                return response.json().then(data => {
+                    throw new Error(data.error);
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Login failed: " + error.message); // Show error message
+        });
+    });
+});
+</script>
+
+
+  </div>
+
+{% endblock %}
