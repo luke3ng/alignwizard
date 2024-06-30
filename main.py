@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 import cv2
 import numpy as np
 from werkzeug.utils import secure_filename
@@ -21,10 +21,13 @@ db = SQLAlchemy(app)
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
 
     # Relationship to link User to their Patients
     patients = db.relationship('Patient', backref='user', lazy=True)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
 
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,6 +59,8 @@ def addPatient(username, userID):
 
 globalImages = {}
 savedImages = {}
+username = ''
+password = ''
 
 # Configure upload folder
 UPLOAD_FOLDER = 'uploads'
@@ -110,8 +115,13 @@ def getUser():
     data = request.json
     username = data['username']
     password = data['password']
-    print(username)
-    print(password)
+    user = db.session.execute(db.select(User).filter_by(username=username)).scalar_one_or_none()
+    pw = check_password_hash(user.password_hash,password)
+
+    print(repr(user))
+    print(pw)
+
+
     return jsonify({"message": "current user recieved"})
 
 @app.route("/createUser", methods=['POST'])
