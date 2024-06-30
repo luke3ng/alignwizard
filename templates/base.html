@@ -18,16 +18,25 @@
                                 Home
                             </a>
                         </li>
+                         {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">
+                                Logout
+                            </a>
+                        </li>
+                        {%else%}
                         <li class="nav-item">
                             <a class="nav-link" href="/login">
                                 Login
                             </a>
                         </li>
+                        {%endif%}
                         <li class="nav-item">
                             <a class="nav-link" href="/uploadImages">
                                 Upload Images
                             </a>
                         </li>
+
                     </ul>
                 </div>
             </nav>

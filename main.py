@@ -108,7 +108,12 @@ def home():
     return render_template("home.html")
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(int(user_id))
+    return db.session.get(User,int(user_id))
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('loginPage'))
 
 
 @app.route("/login")
