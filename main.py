@@ -4,7 +4,6 @@ import numpy as np
 from werkzeug.utils import secure_filename
 import os
 import base64
-from io import BytesIO
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -122,9 +121,12 @@ def loginPage():
 @app.route("/signUp")
 def signUp():
     return render_template("signUp.html")
-@app.route("/findPatient")
+@app.route("/findPatient",methods=['GET'])
 def findPatient():
-    return render_template("findPatient.html")
+    patientList = db.session.execute(db.select(Patient.patient_name).filter_by(user_id=current_user.id)).scalars().all()
+    print(patientList)
+
+    return render_template("findPatient.html",patientList=patientList)
 @app.route("/enterNewPatient")
 def enterNewPatient():
     return render_template("enterNewPatient.html")

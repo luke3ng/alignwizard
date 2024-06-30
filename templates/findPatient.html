@@ -9,5 +9,16 @@
 <Div>
      <a href="/enterNewPatient" class="btn">ADD NEW PATIENT</a>
 </Div>
+<div class="select-container">
+  <label for="patientList">Choose a Patient:</label>
+  <select name="patientList" id="Patient List">
+    {%for patient in patientList%}
+    <option value= {{ patient}}>{{ patient }}</option>
+    {%endfor%}
+
+
+  </select>
+</div>
+
 
 {% endblock %}
