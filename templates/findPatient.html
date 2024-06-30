@@ -3,22 +3,30 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<Div>
+<div>
   <h1>Select Patient</h1>
-</Div>
-<Div>
-     <a href="/enterNewPatient" class="btn">ADD NEW PATIENT</a>
-</Div>
+</div>
+<div>
+  <a href="/enterNewPatient" class="btn">ADD NEW PATIENT</a>
+</div>
 <div class="select-container">
   <label for="patientList">Choose a Patient:</label>
-  <select name="patientList" id="Patient List">
-    {%for patient in patientList%}
-    <option value= {{ patient}}>{{ patient }}</option>
-    {%endfor%}
-
-
+  <select name="patientList" id="patientList">
+    {% for patient in patientList %}
+      <option value="{{ patient }}">{{ patient }}</option>
+    {% endfor %}
   </select>
+  <button id="usePatient" onclick="redirect()">Save</button>
 </div>
 
+<script>
+    function redirect() {
+        // Get the value from the dropdown
+        var dropdown = document.getElementById("patientList");
+        var selectedValue = dropdown.options[dropdown.selectedIndex].value;
 
+        // Redirect to another page with the selected value as a query parameter
+        window.location.href = "/patientHome?data=" + selectedValue;
+    }
+</script>
 {% endblock %}

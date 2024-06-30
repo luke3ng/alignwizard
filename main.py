@@ -127,9 +127,18 @@ def findPatient():
     print(patientList)
 
     return render_template("findPatient.html",patientList=patientList)
+
+
+@app.route("/patientHome")
+def patientHome():
+    patient = request.args.get('patient')
+    return render_template("patientHome.html")
+
 @app.route("/enterNewPatient")
 def enterNewPatient():
     return render_template("enterNewPatient.html")
+def signUp():
+    return render_template("signUp.html")
 @app.route("/getUser", methods=['POST'])
 def getUser():
     data = request.json
@@ -181,6 +190,7 @@ def createPatient():
 @app.route("/uploadImages", methods=['GET', 'POST'])
 @login_required
 def uploadImages():
+
     if request.method == 'POST':
         fileFront = request.files.get('fileInputFront')
         fileBack = request.files.get('fileInputBack')
