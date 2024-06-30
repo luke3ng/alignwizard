@@ -12,29 +12,37 @@
     <input type="password" id="pw" placeholder="Password" name="pw" />
     <button id="sign-in">Sign in</button>
     <a href="/signUp"> <p>Don't have an account? Register</p></a>
-
   </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-<script type="text/javascript">
-    $(document).ready(function() {
-        $("#sign-in").on("click", function(event) {
-            event.preventDefault(); // Prevent default form submission behavior
-            const username = document.getElementById('un').value;
-            const password = document.getElementById('pw').value;
-            $.ajax({
-                type: "POST",
-                url: "/getUser",
-                data: JSON.stringify({ username: username, password: password }),
-                contentType: "application/json",
-                success: function(response) {
-                    console.log(response);
-                },
-                error: function(error) {
-                    console.error("Error:", error);
-                }
-            });
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("sign-in").addEventListener("click", function(event) {
+        event.preventDefault(); // Prevent default form submission behavior
+
+        const username = document.getElementById('un').value;
+        const password = document.getElementById('pw').value;
+
+        fetch("/getUser", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ username: username, password: password })
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = "/"; // Redirect to home page on success
+            } else {
+                return response.json().then(data => {
+                    throw new Error(data.error);
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Login failed: " + error.message); // Show error message
         });
     });
+});
 </script>
 {% endblock %}

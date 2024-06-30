@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 import cv2
 import numpy as np
 from werkzeug.utils import secure_filename
@@ -8,7 +8,7 @@ from io import BytesIO
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
+
 from datetime import datetime
 
 
@@ -18,6 +18,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY']= "myKey"
 app.config['SQLALCHEMY_DATABASE_URI']='postgresql://postgres:password@localhost/postgres'
 db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'loginPage'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -103,6 +106,10 @@ def image_to_base64(image):
 @app.route("/")
 def home():
     return render_template("home.html")
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(int(user_id))
+
 
 @app.route("/login")
 def loginPage():
@@ -116,10 +123,21 @@ def getUser():
     username = data['username']
     password = data['password']
     user = db.session.execute(db.select(User).filter_by(username=username)).scalar_one_or_none()
-    pw = check_password_hash(user.password_hash,password)
+    if user:
+        pw = check_password_hash(user.password_hash, password)
+        if pw == True:
+          print(pw)
+          login_user(user)
 
-    print(repr(user))
-    print(pw)
+          return redirect(url_for('home'))
+        else:
+            jsonify({"error":"incorrect password"}),401
+    else:
+        jsonify({"error": "incorrect username or password"}),401
+
+
+
+
 
 
     return jsonify({"message": "current user recieved"})
@@ -139,6 +157,7 @@ def createUser():
 
 
 @app.route("/uploadImages", methods=['GET', 'POST'])
+@login_required
 def uploadImages():
     if request.method == 'POST':
         fileFront = request.files.get('fileInputFront')
