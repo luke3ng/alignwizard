@@ -144,8 +144,13 @@ def findPatient():
 @app.route("/patientHome")
 def patientHome():
     patient = request.args.get('data')
+    patientid = db.session.execute(db.select(Patient.id).filter_by(patient_name=patient)).scalar_one()
     print(patient)
+    patientImages = db.session.execute(db.select(Image).filter_by(patient_id=patientid)).scalars().all()
+    for image in patientImages:
+        print(image.image_front)
     return render_template("patientHome.html")
+
 
 @app.route("/enterNewPatient")
 def enterNewPatient():
