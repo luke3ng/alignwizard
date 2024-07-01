@@ -1,4 +1,3 @@
-!-- templates/base.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,7 +17,7 @@
                                 Home
                             </a>
                         </li>
-                         {% if current_user.is_authenticated %}
+                        {% if current_user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="/logout">
                                 Logout
@@ -29,19 +28,18 @@
                                 Choose or Create Patient
                             </a>
                         </li>
-                        {%else%}
+                        {% else %}
                         <li class="nav-item">
                             <a class="nav-link" href="/login">
                                 Login
                             </a>
-
-                        {%endif%}
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
-                            <a class="nav-link" href="/uploadImages">
+                            <a class="nav-link" id="uploadImagesLink" href="/uploadImages">
                                 Upload Images
                             </a>
                         </li>
-
                     </ul>
                 </div>
             </nav>
@@ -50,8 +48,18 @@
             </main>
         </div>
     </div>
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script type="text/javascript">
+        // Retrieve the 'data' query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const patientData = urlParams.get('data');
 
+        // Append patientData to the 'Upload Images' link
+        if (patientData) {
+            const uploadImagesLink = document.getElementById('uploadImagesLink');
+            uploadImagesLink.href = `/uploadImages?data=${patientData}`;
+        }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>

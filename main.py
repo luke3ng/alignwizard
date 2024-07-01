@@ -131,7 +131,8 @@ def findPatient():
 
 @app.route("/patientHome")
 def patientHome():
-    patient = request.args.get('patient')
+    patient = request.args.get('data')
+    print(patient)
     return render_template("patientHome.html")
 
 @app.route("/enterNewPatient")
@@ -190,6 +191,8 @@ def createPatient():
 @app.route("/uploadImages", methods=['GET', 'POST'])
 @login_required
 def uploadImages():
+    patient = request.args.get('data')
+    print(patient)
 
     if request.method == 'POST':
         fileFront = request.files.get('fileInputFront')
