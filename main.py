@@ -87,11 +87,10 @@ def scale_coordinates(x, y, display_width, display_height, actual_width, actual_
     scaled_y = int(y * actual_height / display_height)
     return scaled_x, scaled_y
 
-def drawCross(img, x, y):
+def drawCross(img, x, y,display_width,display_height):
     h, w, _ = img.shape
 
-    display_width = 250
-    display_height = 500
+
 
     x, y = scale_coordinates(x, y, display_width, display_height, w, h)
 
@@ -292,9 +291,13 @@ def get_coordinatesFront():
     data = request.json
     x = data['xFront']
     y = data['yFront']
+    width = data['width']
+    height = data['height']
+    print(width)
+    print(height)
 
     img_copy = globalImages['imgFront'].copy()
-    processed_image = drawCross(img_copy, x, y)
+    processed_image = drawCross(img_copy, x, y,width,height)
     savedImages["front"]= processed_image
     base64_image = image_to_base64(processed_image)
 
@@ -315,9 +318,13 @@ def get_coordinatesBack():
     data = request.json
     x = data['xBack']
     y = data['yBack']
+    width = data['width']
+    height = data['height']
+    print(width)
+    print(height)
 
     img_copy = globalImages['imgBack'].copy()
-    processed_image = drawCross(img_copy, x, y)
+    processed_image = drawCross(img_copy, x, y, width, height)
     savedImages["back"]= processed_image
     base64_image = image_to_base64(processed_image)
 
@@ -337,9 +344,13 @@ def get_coordinatesLeft():
     data = request.json
     x = data['xLeft']
     y = data['yLeft']
+    width = data['width']
+    height = data['height']
+    print(width)
+    print(height)
 
     img_copy = globalImages['imgLeft'].copy()
-    processed_image = drawCross(img_copy, x, y)
+    processed_image = drawCross(img_copy, x, y, width, height)
     savedImages["left"]= processed_image
     base64_image = image_to_base64(processed_image)
 
@@ -359,10 +370,14 @@ def get_coordinatesRight():
     data = request.json
     x = data['xRight']
     y = data['yRight']
+    width = data['width']
+    height = data['height']
+    print(width)
+    print(height)
 
     img_copy = globalImages['imgRight'].copy()
 
-    processed_image = drawCross(img_copy, x, y)
+    processed_image = drawCross(img_copy, x, y, width, height)
     savedImages["right"]= processed_image
     base64_image = image_to_base64(processed_image)
 

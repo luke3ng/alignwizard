@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/html">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +11,7 @@
             padding: 10px;
             text-align: center;
             box-sizing: border-box;
-            width: calc(49% - 20px); /* About one-third of the screen width minus margin */
+            width: calc(49% - 20px); /* About half of the screen width minus margin */
         }
         .caption {
             margin-top: 10px;
@@ -81,7 +81,41 @@
                 if (file) {
                     const fileType = file.type;
                     if (/^image\//.test(fileType)) {
-                        document.getElementById(imgElementId).src = URL.createObjectURL(file);
+                        const imgElement = document.getElementById(imgElementId);
+                        imgElement.src = URL.createObjectURL(file);
+
+                        // Create a new Image object to get the dimensions
+                        const img = new Image();
+                        img.src = imgElement.src;
+                        img.onload = function() {
+                            const width = img.naturalWidth;
+                            const height = img.naturalHeight;
+                            console.log(side + " image dimensions: ", width, height);
+
+                            imgElement.addEventListener("click", function(event) {
+                                if (modes[side]) {
+                                    const rect = imgElement.getBoundingClientRect();
+                                    const x = event.clientX - rect.left; // Coordinates relative to the image
+                                    const y = event.clientY - rect.top;  // Coordinates relative to the image
+                                    console.log("Client-side coordinates:", x, y, "Image dimensions:", rect.width, rect.height);
+                                    $.ajax({
+                                        type: "POST",
+                                        url: "/get_coordinates" + side,
+                                        data: JSON.stringify({ ["x" + side]: x, ["y" + side]: y, width: rect.width, height: rect.height }),
+                                        contentType: "application/json",
+                                        success: function(response) {
+                                            console.log(response);
+                                            if (response.image) {
+                                                $("#imageSrc" + side).attr("src", "data:image/png;base64," + response.image);
+                                            }
+                                        },
+                                        error: function(error) {
+                                            console.error("Error:", error);
+                                        }
+                                    });
+                                }
+                            });
+                        };
                     } else {
                         console.error("Unsupported file type. Only images are supported.");
                     }
@@ -115,28 +149,6 @@
 
                 $("#fileInput" + side).on("change", function(event) {
                     handleFileSelect(event, "imageSrc" + side, side);
-                });
-
-                $("#imageSrc" + side).on("click", function(event) {
-                    if (modes[side]) {
-                        const x = event.offsetX;
-                        const y = event.offsetY;
-                        $.ajax({
-                            type: "POST",
-                            url: "/get_coordinates" + side,
-                            data: JSON.stringify({ ["x" + side]: x, ["y" + side]: y }),
-                            contentType: "application/json",
-                            success: function(response) {
-                                console.log(response);
-                                if (response.image) {
-                                    $("#imageSrc" + side).attr("src", "data:image/png;base64," + response.image);
-                                }
-                            },
-                            error: function(error) {
-                                console.error("Error:", error);
-                            }
-                        });
-                    }
                 });
             });
         });
@@ -176,7 +188,6 @@
 
 </body>
 </html>
-
 
 
 

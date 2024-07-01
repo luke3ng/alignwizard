@@ -6,11 +6,12 @@
 <h1 id="patientName"></h1>
 <p id="patientInfo"></p>
     {% for object in data %}
-<div class="container">
-
     <div class="item">
         <p id="date_{{ loop.index0 }}"></p>
     </div>
+<div class="container">
+
+
     <div class="item image-upload" id="front_{{ loop.index0 }}">
         <img id="front_img_{{ loop.index0 }}" style="width: 250px; height: 500px;" />
     </div>
@@ -55,16 +56,12 @@
 
 <style>
     .container {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-        margin-top: 20px;
-        flex-wrap: wrap;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
     }
     .item {
-        flex: 1 0 19%; /* Adjust the flex basis to fit 5 items per row */
+        flex: 1 0 40%;
         text-align: center;
         padding: 10px;
         border: 1px solid #ccc;
@@ -74,9 +71,10 @@
     .image-upload {
         padding: 10px;
     }
-    img {
-        max-width: 100%;
-        height: auto;
-    }
+        img {
+            width: 100%;
+            height: auto;
+            object-fit: contain; /* Maintain aspect ratio */
+        }
 </style>
 {% endblock %}
