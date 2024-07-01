@@ -154,7 +154,7 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .then(response => {
             if (response.ok) {
-                window.location.href = "/patientHome"; // Redirect to home page on success
+                window.location.href = `/patientHome?data=${patientData}`;
             } else {
                 return response.json().then(data => {
                     throw new Error(data.error);
