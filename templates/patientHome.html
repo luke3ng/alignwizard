@@ -5,9 +5,9 @@
 {% block content %}
 <h1 id="patientName"></h1>
 <p id="patientInfo"></p>
-
-<div class="container">
     {% for object in data %}
+<div class="container">
+
     <div class="item">
         <p id="date_{{ loop.index0 }}"></p>
     </div>
@@ -23,8 +23,9 @@
     <div class="item image-upload" id="right_{{ loop.index0 }}">
         <img id="right_img_{{ loop.index0 }}" style="width: 250px; height: 500px;" />
     </div>
-    {% endfor %}
+
 </div>
+    {% endfor %}
 
 <script type="text/javascript">
     document.addEventListener("DOMContentLoaded", function() {
@@ -63,12 +64,13 @@
         flex-wrap: wrap;
     }
     .item {
-        flex: 1 0 21%; /* Adjust the flex basis to fit 4 items per row */
+        flex: 1 0 19%; /* Adjust the flex basis to fit 5 items per row */
         text-align: center;
         padding: 10px;
         border: 1px solid #ccc;
         box-sizing: border-box;
     }
+
     .image-upload {
         padding: 10px;
     }

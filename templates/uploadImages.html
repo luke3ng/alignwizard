@@ -9,8 +9,9 @@
             border: 2px solid black;
             margin: 10px;
             padding: 10px;
-            display: inline-block;
             text-align: center;
+            box-sizing: border-box;
+            width: calc(49% - 20px); /* About one-third of the screen width minus margin */
         }
         .caption {
             margin-top: 10px;
@@ -23,32 +24,37 @@
         .clickable {
             cursor: crosshair;
         }
+        img {
+            width: 100%;
+            height: auto;
+            object-fit: contain; /* Maintain aspect ratio */
+        }
     </style>
 </head>
 <body>
     <h2>Hello</h2>
     <div class="container">
         <div class="inputoutput">
-            <img id="imageSrcFront" alt="No Image" style="width: 250px; height: 500px;" />
+            <img id="imageSrcFront" alt="No Image" />
             <div class="caption">Front <input type="file" id="fileInputFront" name="fileInputFront" /></div>
             <button id="addLinesFront" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <img id="imageSrcBack" alt="No Image" style="width: 250px; height: 500px;" />
+            <img id="imageSrcBack" alt="No Image" />
             <div class="caption">Back <input type="file" id="fileInputBack" name="fileInputBack" /></div>
             <button id="addLinesBack" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <img id="imageSrcLeft" alt="No Image" style="width: 250px; height: 500px;" />
+            <img id="imageSrcLeft" alt="No Image" />
             <div class="caption">Left <input type="file" id="fileInputLeft" name="fileInputLeft" /></div>
             <button id="addLinesLeft" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <img id="imageSrcRight" alt="No Image" style="width: 250px; height: 500px;" />
+            <img id="imageSrcRight" alt="No Image" />
             <div class="caption">Right <input type="file" id="fileInputRight" name="fileInputRight" /></div>
             <button id="addLinesRight" type="button" class="button">Add lines</button>
         </div>
-         <button id="saveImages" type="button" class="button">save</button>
+        <button id="saveImages" type="button" class="button">Save</button>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
@@ -136,38 +142,37 @@
         });
     </script>
 
-<script type = "text/javascript">
-document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("saveImages").addEventListener("click", function(event) {
-        event.preventDefault(); // Prevent default form submission behavior
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("saveImages").addEventListener("click", function(event) {
+                event.preventDefault(); // Prevent default form submission behavior
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const patientData = urlParams.get('data');
+                const urlParams = new URLSearchParams(window.location.search);
+                const patientData = urlParams.get('data');
 
-
-        fetch("/saveImages", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ patientData: patientData})
-        })
-        .then(response => {
-            if (response.ok) {
-                window.location.href = `/patientHome?data=${patientData}`;
-            } else {
-                return response.json().then(data => {
-                    throw new Error(data.error);
+                fetch("/saveImages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ patientData: patientData })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = `/patientHome?data=${patientData}`;
+                    } else {
+                        return response.json().then(data => {
+                            throw new Error(data.error);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Save failed: " + error.message); // Show error message
                 });
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("Login failed: " + error.message); // Show error message
+            });
         });
-    });
-});
-</script>
+    </script>
 
 </body>
 </html>
