@@ -145,7 +145,9 @@ def patientHome():
     patient = request.args.get('data')
     patientid = db.session.execute(db.select(Patient.id).filter_by(patient_name=patient)).scalar_one()
     print(patient)
-    patientImages = db.session.execute(db.select(Image).filter_by(patient_id=patientid)).scalars().all()
+    patientImages = db.session.execute(
+    db.select(Image).filter_by(patient_id=patientid).order_by(Image.date_created.desc())).scalars().all()
+
     image_data = []
     for image in patientImages:
         date = image.date_created
