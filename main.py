@@ -147,9 +147,28 @@ def patientHome():
     patientid = db.session.execute(db.select(Patient.id).filter_by(patient_name=patient)).scalar_one()
     print(patient)
     patientImages = db.session.execute(db.select(Image).filter_by(patient_id=patientid)).scalars().all()
+    image_data = []
     for image in patientImages:
-        print(image.image_front)
-    return render_template("patientHome.html")
+        date = image.date_created
+        frontImage = image.image_front
+        image_front64 = base64.b64encode(frontImage).decode('utf-8')
+
+
+        backImage = image.image_back
+        image_back64 = base64.b64encode(backImage).decode('utf-8')
+        leftImage = image.image_left
+        image_left64 = base64.b64encode(leftImage).decode('utf-8')
+        rightImage = image.image_right
+        image_right64 = base64.b64encode(rightImage).decode('utf-8')
+        image_data.append({
+            "date": date,
+            "frontImage": image_front64,
+            "backImage": image_back64,
+            "leftImage": image_left64,
+            "rightImage": image_right64
+        })
+
+    return render_template("patientHome.html",data=image_data)
 
 
 @app.route("/enterNewPatient")
