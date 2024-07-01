@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,7 +48,7 @@
             <div class="caption">Right <input type="file" id="fileInputRight" name="fileInputRight" /></div>
             <button id="addLinesRight" type="button" class="button">Add lines</button>
         </div>
-         <button id="save" type="button" class="button">save</button>
+         <button id="saveImages" type="button" class="button">save</button>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
@@ -135,6 +135,40 @@
             });
         });
     </script>
+
+<script type = "text/javascript">
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("saveImages").addEventListener("click", function(event) {
+        event.preventDefault(); // Prevent default form submission behavior
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const patientData = urlParams.get('data');
+
+
+        fetch("/saveImages", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ patientData: patientData})
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = "/patientHome"; // Redirect to home page on success
+            } else {
+                return response.json().then(data => {
+                    throw new Error(data.error);
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Login failed: " + error.message); // Show error message
+        });
+    });
+});
+</script>
+
 </body>
 </html>
 

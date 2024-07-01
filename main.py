@@ -41,7 +41,7 @@ class Patient(db.Model):
 
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    date_created = db.Column(db.DateTime, nullable=False, default=datetime.now)
     image_front = db.Column(db.LargeBinary)
     image_back = db.Column(db.LargeBinary)
     image_left = db.Column(db.LargeBinary)
@@ -58,7 +58,19 @@ def addPatient(patientName, userID):
     db.session.add(new_patient)
     db.session.commit()
     print(f"User {patientName} added successfully!")
-
+def addImage(front,back,left,right,patientID):
+    _, buffer = cv2.imencode('.jpg', front)
+    frontBlob = buffer.tobytes()
+    _, buffer = cv2.imencode('.jpg', back)
+    backBlob = buffer.tobytes()
+    _, buffer = cv2.imencode('.jpg', left)
+    leftBlob = buffer.tobytes()
+    _, buffer = cv2.imencode('.jpg', right)
+    rightBlob = buffer.tobytes()
+    new_Images = Image(image_front=frontBlob,image_back=backBlob,image_left=leftBlob,image_right=rightBlob, patient_id=patientID)
+    db.session.add(new_Images)
+    db.session.commit()
+    print(f" images added successfully!")
 globalImages = {}
 savedImages = {}
 username = ''
@@ -191,8 +203,6 @@ def createPatient():
 @app.route("/uploadImages", methods=['GET', 'POST'])
 @login_required
 def uploadImages():
-    patient = request.args.get('data')
-    print(patient)
 
     if request.method == 'POST':
         fileFront = request.files.get('fileInputFront')
@@ -237,6 +247,21 @@ def uploadImages():
             globalImages['imgRight'] = imgRight
 
     return render_template("uploadImages.html")
+@app.route("/saveImages",methods=['POST'])
+def saveImages():
+    data = request.json
+    patientName= data['patientData']
+    print(patientName)
+    patientID = db.session.execute(db.select(Patient.id).filter_by(patient_name=patientName)).scalar()
+    print(patientID)
+    if patientID:
+        addImage(savedImages['front'],savedImages['back'],savedImages['left'],savedImages['right'],patientID)
+        return jsonify({"message":"Successful Image Upload"})
+    else:
+        return jsonify({"error":"Unsuccessful Image upload"})
+
+
+
 
 @app.route("/get_coordinatesFront", methods=['POST'])
 def get_coordinatesFront():
@@ -257,6 +282,7 @@ def uploadFront():
     data = request.json
     img_front_base64 = data['imgFront']
     globalImages['imgFront'] = base64_to_image(img_front_base64)
+    savedImages['front']=globalImages['imgFront']
 
     return jsonify({"message": "Front image received successfully."})
 
@@ -278,6 +304,7 @@ def uploadBack():
     data = request.json
     img_back_base64 = data['imgBack']
     globalImages['imgBack'] = base64_to_image(img_back_base64)
+    savedImages['back'] = globalImages['imgBack']
 
     return jsonify({"message": "Back image received successfully."})
 
@@ -299,6 +326,7 @@ def uploadLeft():
     data = request.json
     img_left_base64 = data['imgLeft']
     globalImages['imgLeft'] = base64_to_image(img_left_base64)
+    savedImages['left'] = globalImages['imgLeft']
 
     return jsonify({"message": "Left image received successfully."})
 
@@ -321,6 +349,7 @@ def uploadRight():
     data = request.json
     img_right_base64 = data['imgRight']
     globalImages['imgRight'] = base64_to_image(img_right_base64)
+    savedImages['right'] = globalImages['imgRight']
 
     return jsonify({"message": "Right image received successfully."})
 
