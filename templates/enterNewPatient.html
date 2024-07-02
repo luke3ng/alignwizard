@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .then(response => {
             if (response.ok) {
-                window.location.href = "/uploadImages"; // Redirect to home page on success
+                window.location.href = "/findPatient"; // Redirect to home page on success
             } else {
                 return response.json().then(data => {
                     throw new Error(data.error);
