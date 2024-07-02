@@ -5,17 +5,12 @@
 {% block content %}
 <h1 id="patientName"></h1>
 <p id="patientInfo"></p>
-<div class="select-container">
-  <label for="dateList">Choose two dates to compare</label>
-  <select name="dateList" id="dateList">
-    {% for date in data %}
-      <option value="date_{{ loop.index0 }}">{{ date.date }}</option>
-    {% endfor %}
-  </select>
-  <button id="usePatient" onclick="redirect()">Save</button>
-</div>
+
 {% for object in data %}
 <div class="container">
+    <div class="item">
+        <p id="date_{{ loop.index0 }}">{{ object.date }}</p>
+    </div>
     <div class="image-grid">
         <div class="image-upload" id="front_{{ loop.index0 }}">
             <img id="front_img_{{ loop.index0 }}" />
@@ -30,8 +25,6 @@
             <img id="right_img_{{ loop.index0 }}" />
         </div>
     </div>
-    <input type="checkbox" id="id_{{ loop.index0 }}" value="{{ object.id }}">
-    <label for="id_{{ loop.index0 }}"> {{ object.id }}</label><br>
 </div>
 {% endfor %}
 
@@ -52,25 +45,13 @@
         // Process the data here
         // Loop through the data and set the content for each corresponding element
         data.forEach((item, index) => {
+            document.getElementById(`date_${index}`).textContent = item.date;
             document.getElementById(`front_img_${index}`).src = 'data:image/jpeg;base64,' + item.frontImage;
             document.getElementById(`back_img_${index}`).src = 'data:image/jpeg;base64,' + item.backImage;
             document.getElementById(`left_img_${index}`).src = 'data:image/jpeg;base64,' + item.leftImage;
             document.getElementById(`right_img_${index}`).src = 'data:image/jpeg;base64,' + item.rightImage;
         });
-
-    $('input[type=checkbox]').on('change', function (e) {
-    if ($('input[type=checkbox]:checked').length > 2) {
-        $(this).prop('checked', false);
-        alert("allowed only 3");
-    }
-});
     });
-
-    function redirect() {
-        // Implement your redirect logic here
-    }
-
-
 </script>
 
 <style>
@@ -105,5 +86,4 @@
     }
 </style>
 {% endblock %}
-
 
