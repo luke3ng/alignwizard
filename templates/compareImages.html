@@ -4,52 +4,28 @@
 
 {% block content %}
 <h1 id="patientName"></h1>
-<p id="patientInfo"></p>
 
-{% for object in data %}
 <div class="container">
-    <div class="item">
-        <p id="date_{{ loop.index0 }}">{{ object.date }}</p>
-    </div>
-    <div class="image-grid">
-        <div class="image-upload" id="front_{{ loop.index0 }}">
-            <img id="front_img_{{ loop.index0 }}" />
-        </div>
-        <div class="image-upload" id="back_{{ loop.index0 }}">
-            <img id="back_img_{{ loop.index0 }}" />
-        </div>
-        <div class="image-upload" id="left_{{ loop.index0 }}">
-            <img id="left_img_{{ loop.index0 }}" />
-        </div>
-        <div class="image-upload" id="right_{{ loop.index0 }}">
-            <img id="right_img_{{ loop.index0 }}" />
-        </div>
-    </div>
 </div>
-{% endfor %}
 
 <script type="text/javascript">
     document.addEventListener("DOMContentLoaded", function() {
         const urlParams = new URLSearchParams(window.location.search);
-        const patient = urlParams.get('data');
+        const patient = urlParams.get('patient');
+        const data = {{ data|tojson|safe }};
+        console.log("Patient data:", data);
 
         if (patient) {
             document.getElementById('patientName').textContent = patient;
-            document.getElementById('patientInfo').textContent = patient;
         }
-
-        // Embed the data directly into the script
-        const data = {{ data|tojson|safe }};
-        console.log("Patient data:", data);
 
         // Process the data here
         // Loop through the data and set the content for each corresponding element
         data.forEach((item, index) => {
-            document.getElementById(`date_${index}`).textContent = item.date;
-            document.getElementById(`front_img_${index}`).src = 'data:image/jpeg;base64,' + item.frontImage;
-            document.getElementById(`back_img_${index}`).src = 'data:image/jpeg;base64,' + item.backImage;
-            document.getElementById(`left_img_${index}`).src = 'data:image/jpeg;base64,' + item.leftImage;
-            document.getElementById(`right_img_${index}`).src = 'data:image/jpeg;base64,' + item.rightImage;
+            document.getElementById(`front_img`).src = 'data:image/jpeg;base64,' + item.frontImage;
+            document.getElementById(`back_img`).src = 'data:image/jpeg;base64,' + item.backImage;
+            document.getElementById(`left_img`).src = 'data:image/jpeg;base64,' + item.leftImage;
+            document.getElementById(`right_img`).src = 'data:image/jpeg;base64,' + item.rightImage;
         });
     });
 </script>

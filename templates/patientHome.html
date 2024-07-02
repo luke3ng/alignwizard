@@ -5,15 +5,9 @@
 {% block content %}
 <h1 id="patientName"></h1>
 <p id="patientInfo"></p>
-<div class="select-container">
-  <label for="dateList">Choose two dates to compare</label>
-  <select name="dateList" id="dateList">
-    {% for date in data %}
-      <option value="date_{{ loop.index0 }}">{{ date.date }}</option>
-    {% endfor %}
-  </select>
-  <button id="usePatient" onclick="redirect()">Save</button>
-</div>
+
+<button id="usePatient" onclick="redirect()">Save</button>
+
 {% for object in data %}
 <div class="container">
     <div class="image-grid">
@@ -30,7 +24,7 @@
             <img id="right_img_{{ loop.index0 }}" />
         </div>
     </div>
-    <input type="checkbox" id="id_{{ loop.index0 }}" value="{{ object.id }}">
+    <input type="checkbox" class="inp" id="id_{{ loop.index0 }}" value="{{ object.id }}">
     <label for="id_{{ loop.index0 }}"> {{ object.id }}</label><br>
 </div>
 {% endfor %}
@@ -58,19 +52,26 @@
             document.getElementById(`right_img_${index}`).src = 'data:image/jpeg;base64,' + item.rightImage;
         });
 
-    $('input[type=checkbox]').on('change', function (e) {
-    if ($('input[type=checkbox]:checked').length > 2) {
-        $(this).prop('checked', false);
-        alert("allowed only 3");
-    }
-});
+        $('input[type=checkbox]').on('change', function (e) {
+            if ($('input[type=checkbox]:checked').length > 2) {
+                $(this).prop('checked', false);
+                alert("allowed only 2");
+            }
+        });
     });
 
     function redirect() {
-        // Implement your redirect logic here
+        const dates = [...document.querySelectorAll('.inp:checked')].map(e => e.value);
+        if (dates.length < 2) {
+            alert("Please select exactly two dates.");
+            return;
+        }
+
+        const patient = document.getElementById('patientName').textContent;
+
+        // Redirect to another page with the selected value as a query parameter
+        window.location.href = `/compareImages?date1=${encodeURIComponent(dates[0])}&date2=${encodeURIComponent(dates[1])}&patient=${encodeURIComponent(patient)}`;
     }
-
-
 </script>
 
 <style>
@@ -105,5 +106,4 @@
     }
 </style>
 {% endblock %}
-
 

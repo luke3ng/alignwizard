@@ -7,7 +7,7 @@ import base64
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from sqlalchemy import or_
 from datetime import datetime
 
 
@@ -172,12 +172,15 @@ def patientHome():
     return render_template("patientHome.html",data=image_data)
 
 @app.route("/compareImages")
-def compareImagse():
-    patient = request.args.get('data')
+def compareImages():
+    id1 = request.args.get('date1')
+    id2 = request.args.get('date2')
+    patient = request.args.get('patient')
     patientid = db.session.execute(db.select(Patient.id).filter_by(patient_name=patient)).scalar_one()
     print(patient)
     patientImages = db.session.execute(
-    db.select(Image).filter_by(patient_id=patientid).order_by(Image.date_created.desc())).scalars().all()
+    db.select(Image).filter_by(patient_id=patientid).filter(or_(id == id1, id == id2))
+    .order_by(Image.date_created.desc())).scalars().all()
 
     image_data = []
     for image in patientImages:
