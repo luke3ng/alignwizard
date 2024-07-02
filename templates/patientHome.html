@@ -5,28 +5,28 @@
 {% block content %}
 <h1 id="patientName"></h1>
 <p id="patientInfo"></p>
-    {% for object in data %}
-    <div class="item">
-        <p id="date_{{ loop.index0 }}"></p>
-    </div>
+
+{% for object in data %}
 <div class="container">
-
-
-    <div class="item image-upload" id="front_{{ loop.index0 }}">
-        <img id="front_img_{{ loop.index0 }}" style="width: 250px; height: 500px;" />
+    <div class="item">
+        <p id="date_{{ loop.index0 }}">{{ object.date }}</p>
     </div>
-    <div class="item image-upload" id="back_{{ loop.index0 }}">
-        <img id="back_img_{{ loop.index0 }}" style="width: 250px; height: 500px;" />
+    <div class="image-grid">
+        <div class="image-upload" id="front_{{ loop.index0 }}">
+            <img id="front_img_{{ loop.index0 }}" />
+        </div>
+        <div class="image-upload" id="back_{{ loop.index0 }}">
+            <img id="back_img_{{ loop.index0 }}" />
+        </div>
+        <div class="image-upload" id="left_{{ loop.index0 }}">
+            <img id="left_img_{{ loop.index0 }}" />
+        </div>
+        <div class="image-upload" id="right_{{ loop.index0 }}">
+            <img id="right_img_{{ loop.index0 }}" />
+        </div>
     </div>
-    <div class="item image-upload" id="left_{{ loop.index0 }}">
-        <img id="left_img_{{ loop.index0 }}" style="width: 250px; height: 500px;" />
-    </div>
-    <div class="item image-upload" id="right_{{ loop.index0 }}">
-        <img id="right_img_{{ loop.index0 }}" style="width: 250px; height: 500px;" />
-    </div>
-
 </div>
-    {% endfor %}
+{% endfor %}
 
 <script type="text/javascript">
     document.addEventListener("DOMContentLoaded", function() {
@@ -56,25 +56,34 @@
 
 <style>
     .container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        padding: 10px;
     }
     .item {
-        flex: 1 0 40%;
+        width: 100%;
         text-align: center;
-        padding: 10px;
-        border: 1px solid #ccc;
-        box-sizing: border-box;
+        margin-bottom: 10px;
     }
-
+    .image-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        width: 100%;
+    }
     .image-upload {
-        padding: 10px;
+        flex: 1 0 48%; /* Each image takes approximately half of the available width */
+        box-sizing: border-box;
+        margin-bottom: 10px;
     }
-        img {
-            width: 100%;
-            height: auto;
-            object-fit: contain; /* Maintain aspect ratio */
-        }
+    img {
+        width: 100%;
+        height: auto;
+        object-fit: contain; /* Maintain aspect ratio */
+    }
 </style>
 {% endblock %}
+
