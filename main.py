@@ -33,7 +33,7 @@ class User(UserMixin, db.Model):
 
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    patient_name = db.Column(db.String(150), unique=True, nullable=False)
+    patient_name = db.Column(db.String(150),  nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     # Relationship to link Patient to their Images
@@ -209,6 +209,10 @@ def createUser():
     password = data['password']
     print(username)
     print(password)
+
+    nameTaken = db.session.execute(db.select(User).filter_by(username=username)).scalar_one_or_none()
+    if nameTaken:
+        return jsonify({"error":"name is taken"}),401
     addUser(username,password)
 
     return jsonify({"message": "new user recieved"})
@@ -218,6 +222,10 @@ def createPatient():
     data = request.json
     patientName = data['patient']
     print(patientName)
+    nameTaken = db.session.execute(db.select(Patient).filter_by(user_id=current_user.id).filter_by(patient_name=patientName)).scalar_one_or_none()
+    if nameTaken:
+        return jsonify({"error":"name is taken"}),401
+
 
     addPatient(patientName,current_user.id)
 

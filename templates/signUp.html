@@ -3,22 +3,21 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<h1>sign up</h1>
+<h1>Sign Up</h1>
 <div class="signin-wrap">
-
-
-  <div class="form">
+  <form class="form">
     <input type="text" id="un" placeholder="Username" name="un" />
     <input type="password" id="pw" placeholder="Password" name="pw" />
-    <button id="sign-in">Sign in</button>
-    <a href="/login"> <p>Have an account? sign in</p></a>
-  </div>
+    <button type="button" id="sign-in">Sign In</button>
+    <a href="/login"> <p>Have an account? Sign in</p></a>
+  </form>
+  <p id="userTaken"></p>
 </div>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script type="text/javascript">
     $(document).ready(function() {
         $("#sign-in").on("click", function(event) {
-            event.preventDefault(); // Prevent default form submission behavior
+            event.preventDefault(); // Prevent default button behavior
             const username = document.getElementById('un').value;
             const password = document.getElementById('pw').value;
             $.ajax({
@@ -28,9 +27,11 @@
                 contentType: "application/json",
                 success: function(response) {
                     console.log(response);
+                    window.location.href = "/login";
                 },
                 error: function(error) {
                     console.error("Error:", error);
+                    document.getElementById('userTaken').innerText = 'Username taken';
                 }
             });
         });
