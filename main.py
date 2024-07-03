@@ -143,17 +143,22 @@ def findPatient():
 @app.route("/patientHome")
 def patientHome():
     patient = request.args.get('data')
-    patientid = db.session.execute(db.select(Patient.id).filter_by(patient_name=patient)).scalar_one()
+    patientid = db.session.execute(
+        db.select(Patient.id).filter_by(patient_name=patient, user_id=current_user.id)
+    ).scalar_one()
+
     print(patient)
+
     patientImages = db.session.execute(
-    db.select(Image).filter_by(patient_id=patientid).order_by(Image.date_created.desc())).scalars().all()
+        db.select(Image).filter_by(patient_id=patientid).order_by(Image.date_created.desc())
+    ).scalars().all()
 
     image_data = []
     for image in patientImages:
+        id = image.id
         date = image.date_created
         frontImage = image.image_front
         image_front64 = base64.b64encode(frontImage).decode('utf-8')
-
 
         backImage = image.image_back
         image_back64 = base64.b64encode(backImage).decode('utf-8')
@@ -162,6 +167,7 @@ def patientHome():
         rightImage = image.image_right
         image_right64 = base64.b64encode(rightImage).decode('utf-8')
         image_data.append({
+            "id": id,
             "date": date,
             "frontImage": image_front64,
             "backImage": image_back64,
@@ -169,25 +175,30 @@ def patientHome():
             "rightImage": image_right64
         })
 
-    return render_template("patientHome.html",data=image_data)
+    return render_template("patientHome.html", data=image_data)
+
 
 @app.route("/compareImages")
 def compareImages():
     id1 = request.args.get('date1')
+    print(id1)
     id2 = request.args.get('date2')
+    print(id2)
+
     patient = request.args.get('patient')
-    patientid = db.session.execute(db.select(Patient.id).filter_by(patient_name=patient)).scalar_one()
     print(patient)
+
+    # Ensure you use Image.id for the filter
     patientImages = db.session.execute(
-    db.select(Image).filter_by(patient_id=patientid).filter(or_(id == id1, id == id2))
-    .order_by(Image.date_created.desc())).scalars().all()
+        db.select(Image).filter(or_(Image.id == id1, Image.id == id2))
+        .order_by(Image.date_created.desc())
+    ).scalars().all()
 
     image_data = []
     for image in patientImages:
         date = image.date_created
         frontImage = image.image_front
         image_front64 = base64.b64encode(frontImage).decode('utf-8')
-
 
         backImage = image.image_back
         image_back64 = base64.b64encode(backImage).decode('utf-8')
@@ -196,6 +207,7 @@ def compareImages():
         rightImage = image.image_right
         image_right64 = base64.b64encode(rightImage).decode('utf-8')
         image_data.append({
+            "id": image.id,  # Include ID for easy reference in frontend
             "date": date,
             "frontImage": image_front64,
             "backImage": image_back64,
@@ -203,7 +215,9 @@ def compareImages():
             "rightImage": image_right64
         })
 
-    return render_template("compareImages.html",data=image_data)
+
+    return render_template("compareImages.html", data=image_data)
+
 @app.route("/enterNewPatient")
 def enterNewPatient():
     return render_template("enterNewPatient.html")

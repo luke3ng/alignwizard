@@ -4,8 +4,37 @@
 
 {% block content %}
 <h1 id="patientName"></h1>
+<p id="patientInfo"></p>
 
 <div class="container">
+    <div class="comparison-grid">
+        <!-- Left side: Front and Left images -->
+        <div class="comparison-image">
+            <img id="front_img_1" />
+        </div>
+        <div class="comparison-image">
+            <img id="front_img_2" />
+        </div>
+        <div class="comparison-image">
+            <img id="left_img_1" />
+        </div>
+        <div class="comparison-image">
+            <img id="left_img_2" />
+        </div>
+        <!-- Right side: Back and Right images -->
+        <div class="comparison-image">
+            <img id="back_img_1" />
+        </div>
+        <div class="comparison-image">
+            <img id="back_img_2" />
+        </div>
+        <div class="comparison-image">
+            <img id="right_img_1" />
+        </div>
+        <div class="comparison-image">
+            <img id="right_img_2" />
+        </div>
+    </div>
 </div>
 
 <script type="text/javascript">
@@ -19,14 +48,25 @@
             document.getElementById('patientName').textContent = patient;
         }
 
-        // Process the data here
-        // Loop through the data and set the content for each corresponding element
-        data.forEach((item, index) => {
-            document.getElementById(`front_img`).src = 'data:image/jpeg;base64,' + item.frontImage;
-            document.getElementById(`back_img`).src = 'data:image/jpeg;base64,' + item.backImage;
-            document.getElementById(`left_img`).src = 'data:image/jpeg;base64,' + item.leftImage;
-            document.getElementById(`right_img`).src = 'data:image/jpeg;base64,' + item.rightImage;
-        });
+        if (data.length >= 2) {
+            // Process the first set of images
+            const item1 = data.find(item => item.id == urlParams.get('date1'));
+            if (item1) {
+                document.getElementById('front_img_1').src = 'data:image/jpeg;base64,' + item1.frontImage;
+                document.getElementById('left_img_1').src = 'data:image/jpeg;base64,' + item1.leftImage;
+                document.getElementById('back_img_1').src = 'data:image/jpeg;base64,' + item1.backImage;
+                document.getElementById('right_img_1').src = 'data:image/jpeg;base64,' + item1.rightImage;
+            }
+
+            // Process the second set of images
+            const item2 = data.find(item => item.id == urlParams.get('date2'));
+            if (item2) {
+                document.getElementById('front_img_2').src = 'data:image/jpeg;base64,' + item2.frontImage;
+                document.getElementById('left_img_2').src = 'data:image/jpeg;base64,' + item2.leftImage;
+                document.getElementById('back_img_2').src = 'data:image/jpeg;base64,' + item2.backImage;
+                document.getElementById('right_img_2').src = 'data:image/jpeg;base64,' + item2.rightImage;
+            }
+        }
     });
 </script>
 
@@ -39,27 +79,25 @@
         border: 1px solid #ccc;
         padding: 10px;
     }
-    .item {
+    .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto auto auto;
+        gap: 10px;
         width: 100%;
-        text-align: center;
-        margin-bottom: 10px;
     }
-    .image-grid {
+    .comparison-image {
         display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        width: 100%;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid #ccc;
+        padding: 10px;
     }
-    .image-upload {
-        flex: 1 0 48%; /* Each image takes approximately half of the available width */
-        box-sizing: border-box;
-        margin-bottom: 10px;
-    }
-    img {
+    .comparison-image img {
         width: 100%;
         height: auto;
-        object-fit: contain; /* Maintain aspect ratio */
+        max-height: 500px; /* Adjust max-height as needed */
+        object-fit: contain;
     }
 </style>
 {% endblock %}
-

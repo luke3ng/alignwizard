@@ -25,7 +25,7 @@
         </div>
     </div>
     <input type="checkbox" class="inp" id="id_{{ loop.index0 }}" value="{{ object.id }}">
-    <label for="id_{{ loop.index0 }}"> {{ object.id }}</label><br>
+    <label for="id_{{ loop.index0 }}"> {{ object.date }}</label><br>
 </div>
 {% endfor %}
 
@@ -106,4 +106,5 @@
     }
 </style>
 {% endblock %}
+
 
