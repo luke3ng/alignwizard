@@ -3,6 +3,26 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<h1>Welcome to the Homepage</h1>
-<p>This is the main content area.</p>
+<div class="wrapper">
+    <h1>Struggling with overcomplicated software?</h1>
+    <h2>Posture therapy software designed for modern physical therapists</h2>
+    <div class="wrapper">
+    <button class="button" id="signUp" onclick="redirect()">Join Now</button>
+</div>
+</div>
+<p> </p>
+<div class="container">
+  <img id="homeImage" src="{{ url_for('static', filename='homeImage.jpg') }}" />
+</div>
+
+<div class="wrapper">
+    <button class="button" id="join" onclick="redirect()">Join Now</button>
+</div>
+<script type = "text/javascript">
+        function redirect() {
+
+        // Redirect to another page with the selected value as a query parameter
+        window.location.href = `/signUp`;
+    }
+</script>
 {% endblock %}

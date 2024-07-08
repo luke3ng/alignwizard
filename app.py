@@ -13,7 +13,7 @@ from datetime import datetime
 
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY']= "myKey"
 app.config['SQLALCHEMY_DATABASE_URI']='postgresql://postgres:password@localhost/postgres'
 db = SQLAlchemy(app)

@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}My App{% endblock %}</title>
+    <title>{% block title %}Posture Therapy{% endblock %}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <!-- Top Navigation Bar -->
-    <nav class="navbar navbar-expand-md navbar-light bg-light">
-        <a class="navbar-brand" href="/">My App</a>
+    <nav class="navbar navbar-expand-md navbar-light custom-navbar">
+        <a class="navbar-brand" href="/">Posture Therapy</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -33,12 +33,10 @@
                 <li class="nav-item">
                     <a class="nav-link" id="uploadImagesLink" href="/uploadImages">Upload Images</a>
                 </li>
-
             </ul>
         </div>
     </nav>
 
-    <!-- Main Content Area -->
     <div class="container-fluid">
         <div class="row">
             <main role="main" class="col-md-12 ml-sm-auto col-lg-12 px-4">
@@ -47,20 +45,18 @@
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script type="text/javascript">
-        // Retrieve the 'data' query parameter
         const urlParams = new URLSearchParams(window.location.search);
         const patientData = urlParams.get('data');
 
-        // Append patientData to the 'Upload Images' link
         if (patientData) {
             const uploadImagesLink = document.getElementById('uploadImagesLink');
             uploadImagesLink.href = `/uploadImages?data=${patientData}`;
         }
-
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>
+

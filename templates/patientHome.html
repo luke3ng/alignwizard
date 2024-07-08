@@ -1,4 +1,4 @@
-{% extends "baseTwo.html" %}
+{% extends "basetwo.html" %}
 
 {% block title %}Home{% endblock %}
 
@@ -9,7 +9,7 @@
 <button id="usePatient" onclick="redirect()">Save</button>
 
 {% for object in data %}
-<div class="container">
+<div class="container patient-data">
     <div class="image-grid">
         <div class="image-upload" id="front_{{ loop.index0 }}">
             <img id="front_img_{{ loop.index0 }}" />
@@ -73,38 +73,4 @@
         window.location.href = `/compareImages?date1=${encodeURIComponent(dates[0])}&date2=${encodeURIComponent(dates[1])}&patient=${encodeURIComponent(patient)}`;
     }
 </script>
-
-<style>
-    .container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-bottom: 20px;
-        border: 1px solid #ccc;
-        padding: 10px;
-    }
-    .item {
-        width: 100%;
-        text-align: center;
-        margin-bottom: 10px;
-    }
-    .image-grid {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        width: 100%;
-    }
-    .image-upload {
-        flex: 1 0 48%; /* Each image takes approximately half of the available width */
-        box-sizing: border-box;
-        margin-bottom: 10px;
-    }
-    img {
-        width: 100%;
-        height: auto;
-        object-fit: contain; /* Maintain aspect ratio */
-    }
-</style>
 {% endblock %}
-
-
