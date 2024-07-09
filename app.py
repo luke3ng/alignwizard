@@ -115,7 +115,12 @@ def image_to_base64(image):
 
 @app.route("/")
 def home():
+    if current_user.is_authenticated:
+        return redirect(url_for('homeLogged'))
     return render_template("home.html")
+@app.route("/homeLogged")
+def homeLogged():
+    return render_template("homeLogged.html")
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User,int(user_id))

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center">
+        <h1>Welcome, {{ current_user.name }}!</h1>
+        <p class="lead">Manage your posture therapy sessions and patient information with ease.</p>
+    </div>
+    <div class="row mt-5">
+        <div class="col-md-4 text-center">
+            <h2>View Patients</h2>
+            <p>Access and manage your patient records.</p>
+            <button class="btn button" onclick="window.location.href='/patients'">View Patients</button>
+        </div>
+        <div class="col-md-4 text-center">
+            <h2>Upload Images</h2>
+            <p>Upload and analyze patient posture images.</p>
+            <button class="btn button" onclick="window.location.href='/uploadImages'">Upload Images</button>
+        </div>
+                <div class="col-md-4 text-center">
+            <h2>Upload Images</h2>
+            <p>Upload and analyze patient posture images.</p>
+            <button class="btn button" onclick="window.location.href='/uploadImages'">Upload Images</button>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
