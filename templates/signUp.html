@@ -6,7 +6,8 @@
 <h1>Sign Up</h1>
 <div class="signin-wrap">
   <form class="form">
-    <input type="text" id="un" placeholder="Username" name="un" />
+    <input type="text" id="un" placeholder="Name" name="un" />
+    <input type="text" id="email" placeholder="email" name="email" />
     <input type="password" id="pw" placeholder="Password" name="pw" />
     <button type="button" id="sign-in">Sign In</button>
     <a href="/login"> <p>Have an account? Sign in</p></a>
@@ -18,12 +19,13 @@
     $(document).ready(function() {
         $("#sign-in").on("click", function(event) {
             event.preventDefault(); // Prevent default button behavior
-            const username = document.getElementById('un').value;
+            const name = document.getElementById('un').value;
             const password = document.getElementById('pw').value;
+            const email = document.getElementById('email').value;
             $.ajax({
                 type: "POST",
                 url: "/createUser",
-                data: JSON.stringify({ username: username, password: password }),
+                data: JSON.stringify({ name: name, password: password,email:email }),
                 contentType: "application/json",
                 success: function(response) {
                     console.log(response);

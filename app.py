@@ -22,14 +22,16 @@ login_manager.init_app(app)
 login_manager.login_view = 'loginPage'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+
     password_hash = db.Column(db.String(200), nullable=False)
 
     # Relationship to link User to their Patients
     patients = db.relationship('Patient', backref='user', lazy=True)
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self.name}>'
 
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -47,12 +49,12 @@ class Image(db.Model):
     image_left = db.Column(db.LargeBinary)
     image_right = db.Column(db.LargeBinary)
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
-def addUser(username, password):
+def addUser(name,email, password):
     password_hash = generate_password_hash(password)
-    new_user = User(username=username, password_hash=password_hash)
+    new_user = User(name=name, password_hash=password_hash, email = email)
     db.session.add(new_user)
     db.session.commit()
-    print(f"User {username} added successfully!")
+    print(f"User {name} added successfully!")
 def addPatient(patientName, userID):
     new_patient = Patient(patient_name=patientName, user_id=userID)
     db.session.add(new_patient)
@@ -73,8 +75,9 @@ def addImage(front,back,left,right,patientID):
     print(f" images added successfully!")
 globalImages = {}
 savedImages = {}
-username = ''
+name = ''
 password = ''
+email = ''
 
 # Configure upload folder
 UPLOAD_FOLDER = 'uploads'
@@ -231,9 +234,10 @@ def signUp():
 @app.route("/getUser", methods=['POST'])
 def getUser():
     data = request.json
-    username = data['username']
+
     password = data['password']
-    user = db.session.execute(db.select(User).filter_by(username=username)).scalar_one_or_none()
+    email = data['email']
+    user = db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none()
     if user:
         pw = check_password_hash(user.password_hash, password)
         if pw == True:
@@ -244,7 +248,7 @@ def getUser():
         else:
             jsonify({"error":"incorrect password"}),401
     else:
-        jsonify({"error": "incorrect username or password"}),401
+        jsonify({"error": "incorrect email or password"}),401
 
 
 
@@ -256,15 +260,15 @@ def getUser():
 @app.route("/createUser", methods=['POST'])
 def createUser():
     data = request.json
-    username = data['username']
+    email = data['email']
     password = data['password']
-    print(username)
+    print(email)
     print(password)
 
-    nameTaken = db.session.execute(db.select(User).filter_by(username=username)).scalar_one_or_none()
+    nameTaken = db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none()
     if nameTaken:
         return jsonify({"error":"name is taken"}),401
-    addUser(username,password)
+    addUser(name,email,password)
 
     return jsonify({"message": "new user recieved"})
 

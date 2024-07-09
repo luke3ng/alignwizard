@@ -8,7 +8,7 @@
   <h2>Login</h2>
 
   <div class="form">
-    <input type="text" id="un" placeholder="Username" name="un" />
+    <input type="text" id="un" placeholder="email" name="un" />
     <input type="password" id="pw" placeholder="Password" name="pw" />
     <button id="sign-in">Sign in</button>
     <a href="/signUp"> <p>Don't have an account? Register</p></a>
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("sign-in").addEventListener("click", function(event) {
         event.preventDefault(); // Prevent default form submission behavior
 
-        const username = document.getElementById('un').value;
+        const email = document.getElementById('un').value;
         const password = document.getElementById('pw').value;
 
         fetch("/getUser", {
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function() {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ username: username, password: password })
+            body: JSON.stringify({ email: email, password: password })
         })
         .then(response => {
             if (response.ok) {
