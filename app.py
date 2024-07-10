@@ -229,8 +229,7 @@ def compareImages():
 @app.route("/enterNewPatient")
 def enterNewPatient():
     return render_template("enterNewPatient.html")
-def signUp():
-    return render_template("signUp.html")
+
 
 
 @app.route("/getUser", methods=['POST'])
@@ -301,6 +300,7 @@ def uploadImages():
             imgFront = cv2.imread(filepathFront)
             if imgFront is None:
                 return "Error: Unable to read uploaded front image."
+
             globalImages['imgFront'] = imgFront
 
         if fileBack:
@@ -310,6 +310,7 @@ def uploadImages():
             imgBack = cv2.imread(filepathBack)
             if imgBack is None:
                 return "Error: Unable to read uploaded back image."
+
             globalImages['imgBack'] = imgBack
 
         if fileLeft:
@@ -319,7 +320,9 @@ def uploadImages():
             imgLeft = cv2.imread(filepathLeft)
             if imgLeft is None:
                 return "Error: Unable to read uploaded left image."
+
             globalImages['imgLeft'] = imgLeft
+
 
         if fileRight:
             filenameRight = secure_filename(fileRight.filename)
@@ -328,7 +331,9 @@ def uploadImages():
             imgRight = cv2.imread(filepathRight)
             if imgRight is None:
                 return "Error: Unable to read uploaded right image."
+
             globalImages['imgRight'] = imgRight
+
 
     return render_template("uploadImages.html")
 @app.route("/saveImages",methods=['POST'])
@@ -356,6 +361,11 @@ def get_coordinatesFront():
     height = data['height']
     print(width)
     print(height)
+    print(x)
+    print(y)
+    _,h,w =globalImages['imgFront'].shape
+    print(w)
+    print(h)
 
     img_copy = globalImages['imgFront'].copy()
     processed_image = drawCross(img_copy, x, y,width,height)

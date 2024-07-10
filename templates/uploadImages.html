@@ -1,9 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,52 +27,39 @@
         .clickable {
             cursor: crosshair;
         }
-        .image-wrapper {
-            height: 600px; /* Fixed height for all images */
-            overflow: hidden;
-        }
-        .image-wrapper img {
-            height: 100%;
-            width: auto;
-            object-fit: cover;
+        img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
         }
     </style>
 </head>
 <body>
-    <h2>Hello</h2>
+
     <div class="container">
         <div class="inputoutput">
-            <div class="image-wrapper">
-                <img id="imageSrcFront" alt="No Image" />
-            </div>
+            <img id="imageSrcFront" alt="No Image" />
             <div class="caption">Front <input type="file" id="fileInputFront" name="fileInputFront" /></div>
             <button id="addLinesFront" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <div class="image-wrapper">
-                <img id="imageSrcBack" alt="No Image" />
-            </div>
+            <img id="imageSrcBack" alt="No Image" />
             <div class="caption">Back <input type="file" id="fileInputBack" name="fileInputBack" /></div>
             <button id="addLinesBack" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <div class="image-wrapper">
-                <img id="imageSrcLeft" alt="No Image" />
-            </div>
+            <img id="imageSrcLeft" alt="No Image" />
             <div class="caption">Left <input type="file" id="fileInputLeft" name="fileInputLeft" /></div>
             <button id="addLinesLeft" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <div class="image-wrapper">
-                <img id="imageSrcRight" alt="No Image" />
-            </div>
+            <img id="imageSrcRight" alt="No Image" />
             <div class="caption">Right <input type="file" id="fileInputRight" name="fileInputRight" /></div>
             <button id="addLinesRight" type="button" class="button">Add lines</button>
         </div>
-    </div>
-    <div class="d-flex justify-content-center mt-3">
         <button id="saveImages" type="button" class="button">Save</button>
     </div>
+
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
@@ -101,35 +87,24 @@
                         const imgElement = document.getElementById(imgElementId);
                         imgElement.src = URL.createObjectURL(file);
 
+
+
                         const img = new Image();
                         img.src = imgElement.src;
                         img.onload = function() {
                             const width = img.naturalWidth;
                             const height = img.naturalHeight;
-                            console.log(side + " image dimensions: ", width, height);
+                            if(width/height > 1.5){
 
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-
-                            if (width / height > 1.25) {
-                                const newWidth = height * 1.25;
-                                const cropX = (width - newWidth) / 2;
-                                canvas.width = newWidth;
-                                canvas.height = height;
-                                ctx.drawImage(img, cropX, 0, newWidth, height, 0, 0, newWidth, height);
-                            } else {
-                                canvas.width = width;
-                                canvas.height = height;
-                                ctx.drawImage(img, 0, 0, width, height, 0, 0, width, height);
                             }
 
-                            imgElement.src = canvas.toDataURL('image/png');
+                            console.log(side + " image dimensions: ", width, height);
 
                             imgElement.addEventListener("click", function(event) {
                                 if (modes[side]) {
                                     const rect = imgElement.getBoundingClientRect();
-                                    const x = event.clientX - rect.left;
-                                    const y = event.clientY - rect.top;
+                                    const x = event.clientX - rect.left; // Coordinates relative to the image
+                                    const y = event.clientY - rect.top;  // Coordinates relative to the image
                                     console.log("Client-side coordinates:", x, y, "Image dimensions:", rect.width, rect.height);
                                     $.ajax({
                                         type: "POST",
@@ -220,7 +195,6 @@
     </script>
 
 </body>
-
 {% endblock %}
 
 
