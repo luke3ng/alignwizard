@@ -359,13 +359,7 @@ def get_coordinatesFront():
     y = data['yFront']
     width = data['width']
     height = data['height']
-    print(width)
-    print(height)
-    print(x)
-    print(y)
-    _,h,w =globalImages['imgFront'].shape
-    print(w)
-    print(h)
+
 
     img_copy = globalImages['imgFront'].copy()
     processed_image = drawCross(img_copy, x, y,width,height)
