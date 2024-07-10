@@ -29,6 +29,22 @@
 </div>
 {% endfor %}
 
+<style>
+    .image-upload {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ccc;
+        margin: 10px;
+        padding: 10px;
+    }
+    .image-upload img {
+        max-width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+    }
+</style>
+
 <script type="text/javascript">
     document.addEventListener("DOMContentLoaded", function() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -46,10 +62,15 @@
         // Process the data here
         // Loop through the data and set the content for each corresponding element
         data.forEach((item, index) => {
-            document.getElementById(`front_img_${index}`).src = 'data:image/jpeg;base64,' + item.frontImage;
-            document.getElementById(`back_img_${index}`).src = 'data:image/jpeg;base64,' + item.backImage;
-            document.getElementById(`left_img_${index}`).src = 'data:image/jpeg;base64,' + item.leftImage;
-            document.getElementById(`right_img_${index}`).src = 'data:image/jpeg;base64,' + item.rightImage;
+            const frontImg = document.getElementById(`front_img_${index}`);
+            const backImg = document.getElementById(`back_img_${index}`);
+            const leftImg = document.getElementById(`left_img_${index}`);
+            const rightImg = document.getElementById(`right_img_${index}`);
+
+            frontImg.src = 'data:image/jpeg;base64,' + item.frontImage;
+            backImg.src = 'data:image/jpeg;base64,' + item.backImage;
+            leftImg.src = 'data:image/jpeg;base64,' + item.leftImage;
+            rightImg.src = 'data:image/jpeg;base64,' + item.rightImage;
         });
 
         $('input[type=checkbox]').on('change', function (e) {
@@ -74,3 +95,5 @@
     }
 </script>
 {% endblock %}
+
+
