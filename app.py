@@ -231,29 +231,24 @@ def enterNewPatient():
     return render_template("enterNewPatient.html")
 def signUp():
     return render_template("signUp.html")
+
+
 @app.route("/getUser", methods=['POST'])
 def getUser():
     data = request.json
+    email = data.get('email')
+    password = data.get('password')
 
-    password = data['password']
-    email = data['email']
-    user = db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none()
-    if user:
-        pw = check_password_hash(user.password_hash, password)
-        if pw == True:
-          print(pw)
-          login_user(user)
+    # Fetch user by email
+    user = User.query.filter_by(email=email).first()
 
-          return redirect(url_for('home'))
-        else:
-            jsonify({"error":"incorrect password"}),401
-    else:
-        jsonify({"error": "incorrect email or password"}),401
+    # Check if user exists and verify the password
+    if user and check_password_hash(user.password_hash, password):
+        login_user(user)
+        return jsonify({"message": "User authenticated successfully"}), 200
 
-
-
-
-
+    # Return error if authentication fails
+    return jsonify({"error": "Incorrect email or password"}), 401
 
     return jsonify({"message": "current user recieved"})
 
@@ -262,12 +257,13 @@ def createUser():
     data = request.json
     email = data['email']
     password = data['password']
+    name = data['name']
     print(email)
     print(password)
 
     nameTaken = db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none()
     if nameTaken:
-        return jsonify({"error":"name is taken"}),401
+        return jsonify({"error":"email is taken"}),401
     addUser(name,email,password)
 
     return jsonify({"message": "new user recieved"})
