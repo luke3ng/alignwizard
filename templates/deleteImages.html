@@ -5,8 +5,9 @@
 {% block content %}
 <h1 id="patientName"></h1>
 <p id="patientInfo"></p>
-
-<button id="usePatient" onclick="deleteImages()">Delete Images</button>
+<div class = "wrapper">
+    <button id="usePatient" onclick="deleteImages()">Delete Images</button>
+</div>
 
 {% for object in data %}
 <div class="container patient-data">

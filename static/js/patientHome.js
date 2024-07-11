@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (patient) {
         document.getElementById('patientName').textContent = patient;
-        document.getElementById('patientInfo').textContent = patient;
+
     }
 
     // Embed the data directly into the script

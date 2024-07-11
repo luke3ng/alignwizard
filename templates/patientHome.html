@@ -4,10 +4,13 @@
 
 {% block content %}
 <h1 id="patientName"></h1>
-<p id="patientInfo"></p>
 
-<button id="usePatient" onclick="redirect()">Compare Images</button>
-
+<div class = "wrapper">
+    <button id="usePatient" onclick="redirect()">Compare Images</button>
+</div>
+<div class = "wrapper">
+    <p>Select two image sets to compare:</p>
+</div>
 {% for object in data %}
 <div class="container patient-data">
     <div class="image-grid">
