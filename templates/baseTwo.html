@@ -33,6 +33,9 @@
                 <li class="nav-item">
                     <a class="nav-link" id="uploadImagesLink" href="/uploadImages">Upload Images</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="deleteImageLink" href="/deleteImages">Delete Images</a>
+                </li>
             </ul>
         </div>
     </nav>
@@ -55,6 +58,10 @@
         if (patientData) {
             const uploadImagesLink = document.getElementById('uploadImagesLink');
             uploadImagesLink.href = `/uploadImages?data=${patientData}`;
+        }
+        if (patientData) {
+            const deleteImagesLink = document.getElementById('deleteImageLink');
+            deleteImagesLink.href = `/deleteImages?data=${patientData}`;
         }
     </script>
 </body>

@@ -6,8 +6,7 @@
 <h1 id="patientName"></h1>
 <p id="patientInfo"></p>
 
-<button id="usePatient" onclick="redirect()">Compare Images</button>
-
+<button id="usePatient" onclick="deleteImages()">Delete Images</button>
 
 {% for object in data %}
 <div class="container patient-data">
@@ -75,27 +74,37 @@
         });
 
         $('input[type=checkbox]').on('change', function (e) {
-            if ($('input[type=checkbox]:checked').length > 2) {
-                $(this).prop('checked', false);
-                alert("allowed only 2");
-            }
+            // No limit on number of checkboxes
         });
     });
 
-    function redirect() {
+    function deleteImages() {
         const dates = [...document.querySelectorAll('.inp:checked')].map(e => e.value);
-        if (dates.length < 2) {
-            alert("Please select exactly two dates.");
+        if (dates.length === 0) {
+            alert("Please select at least one date.");
             return;
         }
 
         const patient = document.getElementById('patientName').textContent;
 
-        // Redirect to another page with the selected value as a query parameter
-        window.location.href = `/compareImages?date1=${encodeURIComponent(dates[0])}&date2=${encodeURIComponent(dates[1])}&patient=${encodeURIComponent(patient)}`;
+        // Send selected dates and patient info via fetch
+        fetch('/removeImages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ dates: dates })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            // Optionally, reload the page or update the UI
+            window.location.reload();
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
     }
-
 </script>
 {% endblock %}
-
 

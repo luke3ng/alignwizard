@@ -348,6 +348,52 @@ def saveImages():
         return jsonify({"message":"Successful Image Upload"})
     else:
         return jsonify({"error":"Unsuccessful Image upload"})
+@app.route("/deleteImages")
+def deleteImages():
+    patient = request.args.get('data')
+    print(patient)
+    patientid = db.session.execute(
+        db.select(Patient.id).filter_by(patient_name=patient, user_id=current_user.id)
+    ).scalar_one()
+
+    print(patient)
+
+    patientImages = db.session.execute(
+        db.select(Image).filter_by(patient_id=patientid).order_by(Image.date_created.desc())
+    ).scalars().all()
+
+    image_data = []
+    for image in patientImages:
+        id = image.id
+        date = image.date_created
+        frontImage = image.image_front
+        image_front64 = base64.b64encode(frontImage).decode('utf-8')
+
+        backImage = image.image_back
+        image_back64 = base64.b64encode(backImage).decode('utf-8')
+        leftImage = image.image_left
+        image_left64 = base64.b64encode(leftImage).decode('utf-8')
+        rightImage = image.image_right
+        image_right64 = base64.b64encode(rightImage).decode('utf-8')
+        image_data.append({
+            "id": id,
+            "date": date,
+            "frontImage": image_front64,
+            "backImage": image_back64,
+            "leftImage": image_left64,
+            "rightImage": image_right64
+        })
+    return render_template("deleteImages.html",data = image_data)
+@app.route("/removeImages",methods = ["POST"])
+def removeImages():
+    data = request.json
+    imageIds = data['dates']
+
+    for id in imageIds:
+      print(id)
+      db.session.execute(db.delete(Image).filter_by(id=id))
+      db.session.commit()
+    return jsonify({"message": "Images Delete"})
 
 
 
