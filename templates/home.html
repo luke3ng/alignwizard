@@ -43,11 +43,6 @@
     <h5>If you reach your storage limit, easily manage your images.</h5>
 </div>
 
-<script type="text/javascript">
-    function redirect() {
-        // Redirect to another page with the selected value as a query parameter
-        window.location.href = `/signUp`;
-    }
-</script>
+    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 {% endblock %}
 

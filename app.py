@@ -90,11 +90,9 @@ def scale_coordinates(x, y, display_width, display_height, actual_width, actual_
     scaled_y = int(y * actual_height / display_height)
     return scaled_x, scaled_y
 
+
 def drawCross(img, x, y,display_width,display_height):
     h, w, _ = img.shape
-
-
-
     x, y = scale_coordinates(x, y, display_width, display_height, w, h)
 
     x = max(0, min(w - 1, x))
@@ -405,6 +403,10 @@ def get_coordinatesFront():
     y = data['yFront']
     width = data['width']
     height = data['height']
+    print(x)
+    print(y)
+    print(width)
+    print(height)
 
 
     img_copy = globalImages['imgFront'].copy()
