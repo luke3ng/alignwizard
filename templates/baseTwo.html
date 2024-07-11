@@ -18,24 +18,26 @@
                 <li class="nav-item">
                     <a class="nav-link active" href="/">Home</a>
                 </li>
-                {% if current_user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/logout">Logout</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/findPatient">Choose or Create Patient</a>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/login">Login</a>
-                </li>
-                {% endif %}
+
                 <li class="nav-item">
                     <a class="nav-link" id="uploadImagesLink" href="/uploadImages">Upload Images</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="deleteImageLink" href="/deleteImages">Delete Images</a>
                 </li>
+                               {% if current_user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/findPatient">Choose or Create Patient</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">Logout</a>
+                </li>
+
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/login">Login</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </nav>
