@@ -15,7 +15,7 @@ from datetime import datetime
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY']= "myKey"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:password@alignwizardDB.cbmaie42gjxa.us-east-2.rds.amazonaws.com:5432/alignDB'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:Halotop002?@alignwizardDB.cbmaie42gjxa.us-east-2.rds.amazonaws.com:5432/alignDB'
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
