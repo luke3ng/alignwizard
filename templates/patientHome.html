@@ -15,22 +15,23 @@
 <div class="container patient-data">
     <div class="image-grid">
         <div class="image-upload" id="front_{{ loop.index0 }}">
-            <img id="front_img_{{ loop.index0 }}" />
+            <img id="front_img_{{ loop.index0 }}" loading="lazy" />
         </div>
         <div class="image-upload" id="back_{{ loop.index0 }}">
-            <img id="back_img_{{ loop.index0 }}" />
+            <img id="back_img_{{ loop.index0 }}" loading="lazy" />
         </div>
         <div class="image-upload" id="left_{{ loop.index0 }}">
-            <img id="left_img_{{ loop.index0 }}" />
+            <img id="left_img_{{ loop.index0 }}" loading="lazy" />
         </div>
         <div class="image-upload" id="right_{{ loop.index0 }}">
-            <img id="right_img_{{ loop.index0 }}" />
+            <img id="right_img_{{ loop.index0 }}" loading="lazy" />
         </div>
     </div>
     <input type="checkbox" class="inp" id="id_{{ loop.index0 }}" value="{{ object.id }}">
     <label for="id_{{ loop.index0 }}"> {{ object.date }}</label><br>
 </div>
 {% endfor %}
+
 
 <style>
     .image-upload {

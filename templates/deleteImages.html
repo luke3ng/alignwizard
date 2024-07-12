@@ -5,7 +5,7 @@
 {% block content %}
 <h1 id="patientName"></h1>
 <p id="patientInfo"></p>
-<div class = "wrapper">
+<div class="wrapper">
     <button id="usePatient" onclick="deleteImages()">Delete Images</button>
 </div>
 
@@ -13,16 +13,16 @@
 <div class="container patient-data">
     <div class="image-grid">
         <div class="image-upload" id="front_{{ loop.index0 }}">
-            <img id="front_img_{{ loop.index0 }}" />
+            <img id="front_img_{{ loop.index0 }}" src="{{ url_for('static', filename='images/front_' ~ object.id ~ '.jpg') }}" loading="lazy" />
         </div>
         <div class="image-upload" id="back_{{ loop.index0 }}">
-            <img id="back_img_{{ loop.index0 }}" />
+            <img id="back_img_{{ loop.index0 }}" src="{{ url_for('static', filename='images/back_' ~ object.id ~ '.jpg') }}" loading="lazy" />
         </div>
         <div class="image-upload" id="left_{{ loop.index0 }}">
-            <img id="left_img_{{ loop.index0 }}" />
+            <img id="left_img_{{ loop.index0 }}" src="{{ url_for('static', filename='images/left_' ~ object.id ~ '.jpg') }}" loading="lazy" />
         </div>
         <div class="image-upload" id="right_{{ loop.index0 }}">
-            <img id="right_img_{{ loop.index0 }}" />
+            <img id="right_img_{{ loop.index0 }}" src="{{ url_for('static', filename='images/right_' ~ object.id ~ '.jpg') }}" loading="lazy" />
         </div>
     </div>
     <input type="checkbox" class="inp" id="id_{{ loop.index0 }}" value="{{ object.id }}">
@@ -50,5 +50,4 @@
 <script id="patientData" type="application/json">{{ data|tojson|safe }}</script>
 <script src="{{ url_for('static', filename='js/deleteImages.js') }}"></script>
 {% endblock %}
-
 
