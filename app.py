@@ -16,6 +16,7 @@ from datetime import datetime
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY']= "myKey"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:Halotop002%3F@alignwizarddb.cbmaie42gjxa.us-east-2.rds.amazonaws.com:5432/alignDB'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost/postgres'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -417,7 +418,7 @@ def get_coordinatesFront():
     base64_image = image_to_base64(processed_image)
 
 
-    return jsonify({"message": "Coordinates received successfully.", "image": base64_image})
+    return jsonify({"message": "Coordinates received successfully."})
 
 @app.route("/uploadFront", methods=['POST'])
 def uploadFront():
@@ -443,7 +444,7 @@ def get_coordinatesBack():
     savedImages["back"]= processed_image
     base64_image = image_to_base64(processed_image)
 
-    return jsonify({"message": "Coordinates received successfully.", "image": base64_image})
+    return jsonify({"message": "Coordinates received successfully."})
 
 @app.route("/uploadBack", methods=['POST'])
 def uploadBack():
@@ -469,7 +470,7 @@ def get_coordinatesLeft():
     savedImages["left"]= processed_image
     base64_image = image_to_base64(processed_image)
 
-    return jsonify({"message": "Coordinates received successfully.", "image": base64_image})
+    return jsonify({"message": "Coordinates received successfully."})
 
 @app.route("/uploadLeft", methods=['POST'])
 def uploadLeft():
@@ -496,7 +497,7 @@ def get_coordinatesRight():
     savedImages["right"]= processed_image
     base64_image = image_to_base64(processed_image)
 
-    return jsonify({"message": "Coordinates received successfully.", "image": base64_image})
+    return jsonify({"message": "Coordinates received successfully."})
 
 @app.route("/uploadRight", methods=['POST'])
 def uploadRight():
