@@ -1,9 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
-import cv2
-import numpy as np
-from werkzeug.utils import secure_filename
-import os
-import base64
+
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import cv2
 import numpy as np
@@ -294,16 +289,33 @@ def uploadImages():
             globalImages['imgRight'] = imgRight
     return render_template("uploadImages.html")
 
+
 @app.route("/saveImages", methods=['POST'])
 def saveImages():
     data = request.json
     patientName = data['patientData']
     patientID = db.session.execute(db.select(Patient.id).filter_by(patient_name=patientName)).scalar()
+
+    # Logging the state of savedImages
+    app.logger.info(f"savedImages keys: {savedImages.keys()}")
+
     if patientID:
-        addImage(savedImages['front'], savedImages['back'], savedImages['left'], savedImages['right'], patientID)
-        return jsonify({"message": "Successful Image Upload"})
+        try:
+            # Adding logging to ensure the keys exist just before accessing them
+            app.logger.info(f"Attempting to add images for patient ID {patientID}")
+            app.logger.info(f"Front image exists: {'front' in savedImages}")
+            app.logger.info(f"Back image exists: {'back' in savedImages}")
+            app.logger.info(f"Left image exists: {'left' in savedImages}")
+            app.logger.info(f"Right image exists: {'right' in savedImages}")
+
+            addImage(savedImages['front'], savedImages['back'], savedImages['left'], savedImages['right'], patientID)
+            return jsonify({"message": "Successful Image Upload"})
+        except KeyError as e:
+            app.logger.error(f"Missing key in savedImages: {e}")
+            return jsonify({"error": f"Missing key: {e}"}), 400
     else:
         return jsonify({"error": "Unsuccessful Image upload"})
+
 
 @app.route("/deleteImages")
 def deleteImages():
@@ -364,6 +376,7 @@ def uploadFront():
     img_front_base64 = data['imgFront']
     globalImages['imgFront'] = base64_to_image(img_front_base64)
     savedImages['front'] = globalImages['imgFront']
+    app.logger.info(f"Uploaded front image: {savedImages['front'] is not None}")
     return jsonify({"message": "Front image received successfully."})
 
 @app.route("/get_coordinatesBack", methods=['POST'])
