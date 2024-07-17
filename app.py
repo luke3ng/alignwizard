@@ -1,5 +1,4 @@
-
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, g
 import cv2
 import numpy as np
 from werkzeug.utils import secure_filename
@@ -16,7 +15,6 @@ import redis
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
-#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:password@localhost/postgres')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:Halotop002%3F@alignwizarddb.cbmaie42gjxa.us-east-2.rds.amazonaws.com:5432/alignDB'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -30,36 +28,42 @@ if not app.debug:
     handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=1)
     handler.setLevel(logging.INFO)
     app.logger.addHandler(handler)
-redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
 
 # Redis keys
 GLOBAL_IMAGES_KEY = "globalImages"
 SAVED_IMAGES_KEY = "savedImages"
 
+# Helper function to get Redis client
+def get_redis_client():
+    if 'redis_client' not in g:
+        g.redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
+    return g.redis_client
+
 # Helper functions to interact with Redis
-def get_global_image(image_key):
+def get_global_image(redis_client, image_key):
     image_data = redis_client.hget(GLOBAL_IMAGES_KEY, image_key)
     if image_data:
         np_arr = np.frombuffer(base64.b64decode(image_data), np.uint8)
         return cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     return None
 
-def set_global_image(image_key, image):
+def set_global_image(redis_client, image_key, image):
     _, buffer = cv2.imencode('.png', image)
     image_data = base64.b64encode(buffer).decode('utf-8')
     redis_client.hset(GLOBAL_IMAGES_KEY, image_key, image_data)
 
-def get_saved_image(image_key):
+def get_saved_image(redis_client, image_key):
     image_data = redis_client.hget(SAVED_IMAGES_KEY, image_key)
     if image_data:
         np_arr = np.frombuffer(base64.b64decode(image_data), np.uint8)
         return cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     return None
 
-def set_saved_image(image_key, image):
+def set_saved_image(redis_client, image_key, image):
     _, buffer = cv2.imencode('.png', image)
     image_data = base64.b64encode(buffer).decode('utf-8')
     redis_client.hset(SAVED_IMAGES_KEY, image_key, image_data)
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
@@ -111,8 +115,6 @@ def addImage(front, back, left, right, patientID):
     db.session.add(new_images)
     db.session.commit()
     app.logger.info("Images added successfully!")
-
-
 
 # Configure upload folder
 UPLOAD_FOLDER = 'uploads'
@@ -279,6 +281,7 @@ def createPatient():
 @app.route("/uploadImages", methods=['GET', 'POST'])
 @login_required
 def uploadImages():
+    redis_client = get_redis_client()
     if request.method == 'POST':
         fileFront = request.files.get('fileInputFront')
         fileBack = request.files.get('fileInputBack')
@@ -291,7 +294,7 @@ def uploadImages():
             imgFront = cv2.imread(filepathFront)
             if imgFront is None:
                 return "Error: Unable to read uploaded front image."
-            set_global_image('imgFront', imgFront)
+            set_global_image(redis_client, 'imgFront', imgFront)
         if fileBack:
             filenameBack = secure_filename(fileBack.filename)
             filepathBack = os.path.join(app.config['UPLOAD_FOLDER'], filenameBack)
@@ -299,7 +302,7 @@ def uploadImages():
             imgBack = cv2.imread(filepathBack)
             if imgBack is None:
                 return "Error: Unable to read uploaded back image."
-            set_global_image('imgBack', imgBack)
+            set_global_image(redis_client, 'imgBack', imgBack)
         if fileLeft:
             filenameLeft = secure_filename(fileLeft.filename)
             filepathLeft = os.path.join(app.config['UPLOAD_FOLDER'], filenameLeft)
@@ -307,7 +310,7 @@ def uploadImages():
             imgLeft = cv2.imread(filepathLeft)
             if imgLeft is None:
                 return "Error: Unable to read uploaded left image."
-            set_global_image('imgLeft', imgLeft)
+            set_global_image(redis_client, 'imgLeft', imgLeft)
         if fileRight:
             filenameRight = secure_filename(fileRight.filename)
             filepathRight = os.path.join(app.config['UPLOAD_FOLDER'], filenameRight)
@@ -315,16 +318,17 @@ def uploadImages():
             imgRight = cv2.imread(filepathRight)
             if imgRight is None:
                 return "Error: Unable to read uploaded right image."
-            set_global_image('imgRight', imgRight)
+            set_global_image(redis_client, 'imgRight', imgRight)
     return render_template("uploadImages.html")
 
 @app.route("/saveImages", methods=['POST'])
 def saveImages():
+    redis_client = get_redis_client()
     data = request.json
     patientName = data['patientData']
     patientID = db.session.execute(db.select(Patient.id).filter_by(patient_name=patientName)).scalar()
     if patientID:
-        addImage(get_saved_image('front'), get_saved_image('back'), get_saved_image('left'), get_saved_image('right'), patientID)
+        addImage(get_saved_image(redis_client, 'front'), get_saved_image(redis_client, 'back'), get_saved_image(redis_client, 'left'), get_saved_image(redis_client, 'right'), patientID)
         return jsonify({"message": "Successful Image Upload"})
     else:
         return jsonify({"error": "Unsuccessful Image upload"})
@@ -369,9 +373,9 @@ def removeImages():
         db.session.commit()
     return jsonify({"message": "Images Deleted"})
 
-
 @app.route("/get_coordinatesFront", methods=['POST'])
 def get_coordinatesFront():
+    redis_client = get_redis_client()
     data = request.json
     x = data['xFront']
     y = data['yFront']
@@ -379,11 +383,11 @@ def get_coordinatesFront():
     height = data['height']
     app.logger.info(f"Received coordinates for front: ({x}, {y}), width: {width}, height: {height}")
 
-    imgFront = get_global_image('imgFront')
+    imgFront = get_global_image(redis_client, 'imgFront')
     if imgFront is not None:
         img_copy = imgFront.copy()
         processed_image = drawCross(img_copy, x, y, width, height)
-        set_saved_image("front", processed_image)
+        set_saved_image(redis_client, "front", processed_image)
 
         return jsonify({"message": "Coordinates received successfully."})
     else:
@@ -392,15 +396,17 @@ def get_coordinatesFront():
 
 @app.route("/uploadFront", methods=['POST'])
 def uploadFront():
+    redis_client = get_redis_client()
     data = request.json
     img_front_base64 = data['imgFront']
     imgFront = base64_to_image(img_front_base64)
-    set_global_image('imgFront', imgFront)
-    set_saved_image('front', imgFront)
+    set_global_image(redis_client, 'imgFront', imgFront)
+    set_saved_image(redis_client, 'front', imgFront)
     return jsonify({"message": "Front image received successfully."})
 
 @app.route("/get_coordinatesBack", methods=['POST'])
 def get_coordinatesBack():
+    redis_client = get_redis_client()
     data = request.json
     x = data['xBack']
     y = data['yBack']
@@ -408,27 +414,30 @@ def get_coordinatesBack():
     height = data['height']
     app.logger.info(f"Received coordinates for back: ({x}, {y}), width: {width}, height: {height}")
 
-    imgBack = get_global_image('imgBack')
+    imgBack = get_global_image(redis_client, 'imgBack')
     if imgBack is not None:
         img_copy = imgBack.copy()
         processed_image = drawCross(img_copy, x, y, width, height)
-        set_saved_image("back", processed_image)
+        set_saved_image(redis_client, "back", processed_image)
 
         return jsonify({"message": "Coordinates received successfully."})
     else:
         app.logger.error("imgBack not found in globalImages")
         return jsonify({"error": "imgBack not found"}), 400
+
 @app.route("/uploadBack", methods=['POST'])
 def uploadBack():
+    redis_client = get_redis_client()
     data = request.json
     img_back_base64 = data['imgBack']
     imgBack = base64_to_image(img_back_base64)
-    set_global_image('imgBack', imgBack)
-    set_saved_image('Back', imgBack)
-    return jsonify({"message": "back image received successfully."})
+    set_global_image(redis_client, 'imgBack', imgBack)
+    set_saved_image(redis_client, 'back', imgBack)
+    return jsonify({"message": "Back image received successfully."})
 
 @app.route("/get_coordinatesLeft", methods=['POST'])
 def get_coordinatesLeft():
+    redis_client = get_redis_client()
     data = request.json
     x = data['xLeft']
     y = data['yLeft']
@@ -436,11 +445,11 @@ def get_coordinatesLeft():
     height = data['height']
     app.logger.info(f"Received coordinates for left: ({x}, {y}), width: {width}, height: {height}")
 
-    imgLeft = get_global_image('imgLeft')
+    imgLeft = get_global_image(redis_client, 'imgLeft')
     if imgLeft is not None:
         img_copy = imgLeft.copy()
         processed_image = drawCross(img_copy, x, y, width, height)
-        set_saved_image("left", processed_image)
+        set_saved_image(redis_client, "left", processed_image)
 
         return jsonify({"message": "Coordinates received successfully."})
     else:
@@ -449,15 +458,17 @@ def get_coordinatesLeft():
 
 @app.route("/uploadLeft", methods=['POST'])
 def uploadLeft():
+    redis_client = get_redis_client()
     data = request.json
     img_left_base64 = data['imgLeft']
     imgLeft = base64_to_image(img_left_base64)
-    set_global_image('imgLeft', imgLeft)
-    set_saved_image('left', imgLeft)
-    return jsonify({"message": "left image received successfully."})
+    set_global_image(redis_client, 'imgLeft', imgLeft)
+    set_saved_image(redis_client, 'left', imgLeft)
+    return jsonify({"message": "Left image received successfully."})
 
 @app.route("/get_coordinatesRight", methods=['POST'])
 def get_coordinatesRight():
+    redis_client = get_redis_client()
     data = request.json
     x = data['xRight']
     y = data['yRight']
@@ -465,11 +476,11 @@ def get_coordinatesRight():
     height = data['height']
     app.logger.info(f"Received coordinates for right: ({x}, {y}), width: {width}, height: {height}")
 
-    imgRight = get_global_image('imgRight')
+    imgRight = get_global_image(redis_client, 'imgRight')
     if imgRight is not None:
         img_copy = imgRight.copy()
         processed_image = drawCross(img_copy, x, y, width, height)
-        set_saved_image("right", processed_image)
+        set_saved_image(redis_client, "right", processed_image)
 
         return jsonify({"message": "Coordinates received successfully."})
     else:
@@ -478,14 +489,16 @@ def get_coordinatesRight():
 
 @app.route("/uploadRight", methods=['POST'])
 def uploadRight():
+    redis_client = get_redis_client()
     data = request.json
     img_right_base64 = data['imgRight']
     imgRight = base64_to_image(img_right_base64)
-    set_global_image('imgRight', imgRight)
-    set_saved_image('right', imgRight)
-    return jsonify({"message": "right image received successfully."})
+    set_global_image(redis_client, 'imgRight', imgRight)
+    set_saved_image(redis_client, 'right', imgRight)
+    return jsonify({"message": "Right image received successfully."})
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=False)  # Ensure debug is False for production
+
