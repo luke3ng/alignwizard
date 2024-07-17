@@ -12,6 +12,7 @@ from sqlalchemy import or_
 from datetime import datetime
 import logging
 from logging.handlers import RotatingFileHandler
+import redis
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
@@ -29,7 +30,36 @@ if not app.debug:
     handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=1)
     handler.setLevel(logging.INFO)
     app.logger.addHandler(handler)
+redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
 
+# Redis keys
+GLOBAL_IMAGES_KEY = "globalImages"
+SAVED_IMAGES_KEY = "savedImages"
+
+# Helper functions to interact with Redis
+def get_global_image(image_key):
+    image_data = redis_client.hget(GLOBAL_IMAGES_KEY, image_key)
+    if image_data:
+        np_arr = np.frombuffer(base64.b64decode(image_data), np.uint8)
+        return cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    return None
+
+def set_global_image(image_key, image):
+    _, buffer = cv2.imencode('.png', image)
+    image_data = base64.b64encode(buffer).decode('utf-8')
+    redis_client.hset(GLOBAL_IMAGES_KEY, image_key, image_data)
+
+def get_saved_image(image_key):
+    image_data = redis_client.hget(SAVED_IMAGES_KEY, image_key)
+    if image_data:
+        np_arr = np.frombuffer(base64.b64decode(image_data), np.uint8)
+        return cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    return None
+
+def set_saved_image(image_key, image):
+    _, buffer = cv2.imencode('.png', image)
+    image_data = base64.b64encode(buffer).decode('utf-8')
+    redis_client.hset(SAVED_IMAGES_KEY, image_key, image_data)
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
@@ -82,8 +112,7 @@ def addImage(front, back, left, right, patientID):
     db.session.commit()
     app.logger.info("Images added successfully!")
 
-globalImages = {}
-savedImages = {}
+
 
 # Configure upload folder
 UPLOAD_FOLDER = 'uploads'
@@ -262,7 +291,7 @@ def uploadImages():
             imgFront = cv2.imread(filepathFront)
             if imgFront is None:
                 return "Error: Unable to read uploaded front image."
-            globalImages['imgFront'] = imgFront
+            set_global_image('imgFront', imgFront)
         if fileBack:
             filenameBack = secure_filename(fileBack.filename)
             filepathBack = os.path.join(app.config['UPLOAD_FOLDER'], filenameBack)
@@ -270,7 +299,7 @@ def uploadImages():
             imgBack = cv2.imread(filepathBack)
             if imgBack is None:
                 return "Error: Unable to read uploaded back image."
-            globalImages['imgBack'] = imgBack
+            set_global_image('imgBack', imgBack)
         if fileLeft:
             filenameLeft = secure_filename(fileLeft.filename)
             filepathLeft = os.path.join(app.config['UPLOAD_FOLDER'], filenameLeft)
@@ -278,7 +307,7 @@ def uploadImages():
             imgLeft = cv2.imread(filepathLeft)
             if imgLeft is None:
                 return "Error: Unable to read uploaded left image."
-            globalImages['imgLeft'] = imgLeft
+            set_global_image('imgLeft', imgLeft)
         if fileRight:
             filenameRight = secure_filename(fileRight.filename)
             filepathRight = os.path.join(app.config['UPLOAD_FOLDER'], filenameRight)
@@ -286,7 +315,7 @@ def uploadImages():
             imgRight = cv2.imread(filepathRight)
             if imgRight is None:
                 return "Error: Unable to read uploaded right image."
-            globalImages['imgRight'] = imgRight
+            set_global_image('imgRight', imgRight)
     return render_template("uploadImages.html")
 
 @app.route("/saveImages", methods=['POST'])
@@ -295,7 +324,7 @@ def saveImages():
     patientName = data['patientData']
     patientID = db.session.execute(db.select(Patient.id).filter_by(patient_name=patientName)).scalar()
     if patientID:
-        addImage(savedImages['front'], savedImages['back'], savedImages['left'], savedImages['right'], patientID)
+        addImage(get_saved_image('front'), get_saved_image('back'), get_saved_image('left'), get_saved_image('right'), patientID)
         return jsonify({"message": "Successful Image Upload"})
     else:
         return jsonify({"error": "Unsuccessful Image upload"})
@@ -340,6 +369,7 @@ def removeImages():
         db.session.commit()
     return jsonify({"message": "Images Deleted"})
 
+
 @app.route("/get_coordinatesFront", methods=['POST'])
 def get_coordinatesFront():
     data = request.json
@@ -347,18 +377,26 @@ def get_coordinatesFront():
     y = data['yFront']
     width = data['width']
     height = data['height']
-    img_copy = globalImages['imgFront'].copy()
-    processed_image = drawCross(img_copy, x, y, width, height)
-    savedImages["front"] = processed_image
-    base64_image = image_to_base64(processed_image)
-    return jsonify({"message": "Coordinates received successfully."})
+    app.logger.info(f"Received coordinates for front: ({x}, {y}), width: {width}, height: {height}")
+
+    imgFront = get_global_image('imgFront')
+    if imgFront is not None:
+        img_copy = imgFront.copy()
+        processed_image = drawCross(img_copy, x, y, width, height)
+        set_saved_image("front", processed_image)
+
+        return jsonify({"message": "Coordinates received successfully."})
+    else:
+        app.logger.error("imgFront not found in globalImages")
+        return jsonify({"error": "imgFront not found"}), 400
 
 @app.route("/uploadFront", methods=['POST'])
 def uploadFront():
     data = request.json
     img_front_base64 = data['imgFront']
-    globalImages['imgFront'] = base64_to_image(img_front_base64)
-    savedImages['front'] = globalImages['imgFront']
+    imgFront = base64_to_image(img_front_base64)
+    set_global_image('imgFront', imgFront)
+    set_saved_image('front', imgFront)
     return jsonify({"message": "Front image received successfully."})
 
 @app.route("/get_coordinatesBack", methods=['POST'])
@@ -368,19 +406,26 @@ def get_coordinatesBack():
     y = data['yBack']
     width = data['width']
     height = data['height']
-    img_copy = globalImages['imgBack'].copy()
-    processed_image = drawCross(img_copy, x, y, width, height)
-    savedImages["back"] = processed_image
-    base64_image = image_to_base64(processed_image)
-    return jsonify({"message": "Coordinates received successfully."})
+    app.logger.info(f"Received coordinates for back: ({x}, {y}), width: {width}, height: {height}")
 
+    imgBack = get_global_image('imgBack')
+    if imgBack is not None:
+        img_copy = imgBack.copy()
+        processed_image = drawCross(img_copy, x, y, width, height)
+        set_saved_image("back", processed_image)
+
+        return jsonify({"message": "Coordinates received successfully."})
+    else:
+        app.logger.error("imgBack not found in globalImages")
+        return jsonify({"error": "imgBack not found"}), 400
 @app.route("/uploadBack", methods=['POST'])
 def uploadBack():
     data = request.json
     img_back_base64 = data['imgBack']
-    globalImages['imgBack'] = base64_to_image(img_back_base64)
-    savedImages['back'] = globalImages['imgBack']
-    return jsonify({"message": "Back image received successfully."})
+    imgBack = base64_to_image(img_back_base64)
+    set_global_image('imgBack', imgBack)
+    set_saved_image('Back', imgBack)
+    return jsonify({"message": "back image received successfully."})
 
 @app.route("/get_coordinatesLeft", methods=['POST'])
 def get_coordinatesLeft():
@@ -389,19 +434,27 @@ def get_coordinatesLeft():
     y = data['yLeft']
     width = data['width']
     height = data['height']
-    img_copy = globalImages['imgLeft'].copy()
-    processed_image = drawCross(img_copy, x, y, width, height)
-    savedImages["left"] = processed_image
-    base64_image = image_to_base64(processed_image)
-    return jsonify({"message": "Coordinates received successfully."})
+    app.logger.info(f"Received coordinates for left: ({x}, {y}), width: {width}, height: {height}")
+
+    imgLeft = get_global_image('imgLeft')
+    if imgLeft is not None:
+        img_copy = imgLeft.copy()
+        processed_image = drawCross(img_copy, x, y, width, height)
+        set_saved_image("left", processed_image)
+
+        return jsonify({"message": "Coordinates received successfully."})
+    else:
+        app.logger.error("imgLeft not found in globalImages")
+        return jsonify({"error": "imgLeft not found"}), 400
 
 @app.route("/uploadLeft", methods=['POST'])
 def uploadLeft():
     data = request.json
     img_left_base64 = data['imgLeft']
-    globalImages['imgLeft'] = base64_to_image(img_left_base64)
-    savedImages['left'] = globalImages['imgLeft']
-    return jsonify({"message": "Left image received successfully."})
+    imgLeft = base64_to_image(img_left_base64)
+    set_global_image('imgLeft', imgLeft)
+    set_saved_image('left', imgLeft)
+    return jsonify({"message": "left image received successfully."})
 
 @app.route("/get_coordinatesRight", methods=['POST'])
 def get_coordinatesRight():
@@ -410,19 +463,27 @@ def get_coordinatesRight():
     y = data['yRight']
     width = data['width']
     height = data['height']
-    img_copy = globalImages['imgRight'].copy()
-    processed_image = drawCross(img_copy, x, y, width, height)
-    savedImages["right"] = processed_image
-    base64_image = image_to_base64(processed_image)
-    return jsonify({"message": "Coordinates received successfully."})
+    app.logger.info(f"Received coordinates for right: ({x}, {y}), width: {width}, height: {height}")
+
+    imgRight = get_global_image('imgRight')
+    if imgRight is not None:
+        img_copy = imgRight.copy()
+        processed_image = drawCross(img_copy, x, y, width, height)
+        set_saved_image("right", processed_image)
+
+        return jsonify({"message": "Coordinates received successfully."})
+    else:
+        app.logger.error("imgRight not found in globalImages")
+        return jsonify({"error": "imgRight not found"}), 400
 
 @app.route("/uploadRight", methods=['POST'])
 def uploadRight():
     data = request.json
     img_right_base64 = data['imgRight']
-    globalImages['imgRight'] = base64_to_image(img_right_base64)
-    savedImages['right'] = globalImages['imgRight']
-    return jsonify({"message": "Right image received successfully."})
+    imgRight = base64_to_image(img_right_base64)
+    set_global_image('imgRight', imgRight)
+    set_saved_image('right', imgRight)
+    return jsonify({"message": "right image received successfully."})
 
 if __name__ == '__main__':
     with app.app_context():
