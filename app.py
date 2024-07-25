@@ -201,7 +201,7 @@ def image_to_base64(image):
 def home():
     if current_user.is_authenticated:
         return redirect(url_for('findPatient'))
-    return render_template("home.html")
+    return render_template("index.html")
 
 @app.route("/homeLogged")
 def homeLogged():
