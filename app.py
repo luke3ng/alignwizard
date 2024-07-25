@@ -23,6 +23,7 @@ S3_BUCKET = 'postureimagebucket'
 S3_REGION = 'us-east-2'
 s3 = boto3.client('s3', region_name=S3_REGION)
 db = SQLAlchemy(app)
+s3_client = boto3.client('s3', region_name=S3_REGION)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'loginPage'
@@ -38,10 +39,21 @@ GLOBAL_IMAGES_KEY = "globalImages"
 SAVED_IMAGES_KEY = "savedImages"
 
 
+def generate_presigned_url(bucket_name, object_name, expiration=3600):
+    try:
+        response = s3_client.generate_presigned_url('get_object',
+                                                    Params={'Bucket': bucket_name, 'Key': object_name},
+                                                    ExpiresIn=expiration)
+    except Exception as e:
+        app.logger.error(f"Error generating presigned URL: {e}")
+        return None
+    return response
+
+# Function to upload to S3
 def upload_to_s3(file, filename, bucket_name):
     try:
         app.logger.info(f"Uploading {filename} to S3 bucket {bucket_name}")
-        s3.upload_fileobj(
+        s3_client.upload_fileobj(
             file,
             bucket_name,
             filename,
@@ -53,7 +65,8 @@ def upload_to_s3(file, filename, bucket_name):
     except Exception as e:
         app.logger.error(f"Failed to upload {filename} to S3: {e}")
         return None
-    return f"https://{bucket_name}.s3.{S3_REGION}.amazonaws.com/{filename}"
+    # Generate a presigned URL for the uploaded file
+    return generate_presigned_url(bucket_name, filename)
 
 
 # Helper function to get Redis client
@@ -350,6 +363,7 @@ def saveImages():
     # Find the patient by name
     patient = db.session.execute(db.select(Patient).filter_by(patient_name=patientName)).scalar()
     if not patient:
+        app.logger.error(f"Patient {patientName} not found")
         return jsonify({"error": "Patient not found"}), 404
 
     front_image = get_saved_image(redis_client, 'front')
@@ -359,36 +373,44 @@ def saveImages():
 
     # Check if any image is None
     if front_image is None or back_image is None or left_image is None or right_image is None:
+        app.logger.error("One or more images are missing")
         return jsonify({"error": "One or more images are missing"}), 400
 
     # Encode images to JPEG and upload to S3
-    front_image_bytes = io.BytesIO(cv2.imencode('.jpg', front_image)[1])
-    back_image_bytes = io.BytesIO(cv2.imencode('.jpg', back_image)[1])
-    left_image_bytes = io.BytesIO(cv2.imencode('.jpg', left_image)[1])
-    right_image_bytes = io.BytesIO(cv2.imencode('.jpg', right_image)[1])
+    try:
+        front_image_bytes = io.BytesIO(cv2.imencode('.jpg', front_image)[1])
+        back_image_bytes = io.BytesIO(cv2.imencode('.jpg', back_image)[1])
+        left_image_bytes = io.BytesIO(cv2.imencode('.jpg', left_image)[1])
+        right_image_bytes = io.BytesIO(cv2.imencode('.jpg', right_image)[1])
 
-    front_image_url = upload_to_s3(front_image_bytes, f"{patient.id}_set{set_id}_front.jpg", S3_BUCKET)
-    back_image_url = upload_to_s3(back_image_bytes, f"{patient.id}_set{set_id}_back.jpg", S3_BUCKET)
-    left_image_url = upload_to_s3(left_image_bytes, f"{patient.id}_set{set_id}_left.jpg", S3_BUCKET)
-    right_image_url = upload_to_s3(right_image_bytes, f"{patient.id}_set{set_id}_right.jpg", S3_BUCKET)
+        front_image_url = upload_to_s3(front_image_bytes, f"{patient.id}_set{set_id}_front.jpg", S3_BUCKET)
+        back_image_url = upload_to_s3(back_image_bytes, f"{patient.id}_set{set_id}_back.jpg", S3_BUCKET)
+        left_image_url = upload_to_s3(left_image_bytes, f"{patient.id}_set{set_id}_left.jpg", S3_BUCKET)
+        right_image_url = upload_to_s3(right_image_bytes, f"{patient.id}_set{set_id}_right.jpg", S3_BUCKET)
 
-    # Check if all URLs are generated
-    if not all([front_image_url, back_image_url, left_image_url, right_image_url]):
-        return jsonify({"error": "Failed to upload one or more images to S3"}), 500
+        # Check if all URLs are generated
+        if not all([front_image_url, back_image_url, left_image_url, right_image_url]):
+            app.logger.error("Failed to upload one or more images to S3")
+            return jsonify({"error": "Failed to upload one or more images to S3"}), 500
 
-    # Save URLs in the database
-    new_image_record = Image(
-        image_front=front_image_url,
-        image_back=back_image_url,
-        image_left=left_image_url,
-        image_right=right_image_url,
-        patient_id=patient.id
-    )
+        # Save URLs in the database
+        new_image_record = Image(
+            image_front=front_image_url,
+            image_back=back_image_url,
+            image_left=left_image_url,
+            image_right=right_image_url,
+            patient_id=patient.id
+        )
 
-    db.session.add(new_image_record)
-    db.session.commit()
+        db.session.add(new_image_record)
+        db.session.commit()
 
-    return jsonify({"message": "Successful Image Upload", "set_id": set_id})
+        app.logger.info("Successfully uploaded images and saved to database")
+        return jsonify({"message": "Successful Image Upload", "set_id": set_id})
+
+    except Exception as e:
+        app.logger.error(f"An error occurred during image upload and save process: {e}")
+        return jsonify({"error": "An error occurred during the image upload process"}), 500
 
 
 
