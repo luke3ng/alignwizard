@@ -12,8 +12,8 @@
   --background-color: #ffffff; /* Light gray */
   --text-color: #212529; /* Dark gray */
   --header-background-color: #90EE90;
-  --button-background-color: #007bff; /* Blue for buttons */
-  --button-hover-color: #0056b3; /* Darker blue for button hover */
+  --button-background-color: #ADD8E6; /* Blue for buttons */
+  --button-hover-color: #87CEEB; /* Darker blue for button hover */
   --overlay-color: rgba(0, 0, 0, 0.4); /* Slightly lighter overlay */
 }
 
