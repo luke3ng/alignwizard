@@ -14,19 +14,19 @@ document.addEventListener("DOMContentLoaded", function() {
         // Process the first set of images
         const item1 = data.find(item => item.id == urlParams.get('date1'));
         if (item1) {
-            document.getElementById('front_img_1').src = 'data:image/jpeg;base64,' + item1.frontImage;
-            document.getElementById('left_img_1').src = 'data:image/jpeg;base64,' + item1.leftImage;
-            document.getElementById('back_img_1').src = 'data:image/jpeg;base64,' + item1.backImage;
-            document.getElementById('right_img_1').src = 'data:image/jpeg;base64,' + item1.rightImage;
+            document.getElementById('front_img_1').src = item1.frontImage;
+            document.getElementById('left_img_1').src = item1.leftImage;
+            document.getElementById('back_img_1').src = item1.backImage;
+            document.getElementById('right_img_1').src = item1.rightImage;
         }
 
         // Process the second set of images
         const item2 = data.find(item => item.id == urlParams.get('date2'));
         if (item2) {
-            document.getElementById('front_img_2').src = 'data:image/jpeg;base64,' + item2.frontImage;
-            document.getElementById('left_img_2').src = 'data:image/jpeg;base64,' + item2.leftImage;
-            document.getElementById('back_img_2').src = 'data:image/jpeg;base64,' + item2.backImage;
-            document.getElementById('right_img_2').src = 'data:image/jpeg;base64,' + item2.rightImage;
+            document.getElementById('front_img_2').src = item2.frontImage;
+            document.getElementById('left_img_2').src = item2.leftImage;
+            document.getElementById('back_img_2').src = item2.backImage;
+            document.getElementById('right_img_2').src = item2.rightImage;
         }
     }
 });
