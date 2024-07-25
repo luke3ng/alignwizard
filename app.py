@@ -7,13 +7,14 @@ import base64
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import or_
+from sqlalchemy import or_, delete, select
 from datetime import datetime
 import logging
 from logging.handlers import RotatingFileHandler
 import redis
 import boto3
 import io
+from urllib.parse import urlparse
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
@@ -39,6 +40,18 @@ GLOBAL_IMAGES_KEY = "globalImages"
 SAVED_IMAGES_KEY = "savedImages"
 
 
+def delete_s3_object(url):
+    # Parse the URL to get the bucket name and key
+    parsed_url = urlparse(url)
+    bucket_name = parsed_url.netloc.split('.')[0]
+    key = parsed_url.path.lstrip('/')
+
+    try:
+        # Delete the object from S3
+        s3_client.delete_object(Bucket=bucket_name, Key=key)
+        print(f"Deleted {key} from {bucket_name}")
+    except Exception as e:
+        print(f"Error deleting object {key} from {bucket_name}: {e}")
 def generate_presigned_url(bucket_name, object_name, expiration=3600):
     try:
         response = s3_client.generate_presigned_url('get_object',
@@ -446,10 +459,25 @@ def deleteImages():
 def removeImages():
     data = request.json
     imageIds = data['dates']
+
     for id in imageIds:
-        db.session.execute(db.delete(Image).filter_by(id=id))
-        db.session.commit()
-    return jsonify({"message": "Images Deleted"})
+        # Fetch the image record using SQLAlchemy Core
+        image_record = db.session.execute(select(Image).filter_by(id=id)).scalar_one_or_none()
+
+        if image_record:
+            # Delete the objects from S3
+            delete_s3_object(image_record.image_front)
+            delete_s3_object(image_record.image_back)
+            delete_s3_object(image_record.image_left)
+            delete_s3_object(image_record.image_right)
+
+            # Delete the record from the database
+            db.session.execute(delete(Image).filter_by(id=id))
+            db.session.commit()
+        else:
+            app.logger.error(f"Image with ID {id} not found")
+
+    return jsonify({"message": "Images Deleted"}), 200
 
 @app.route("/get_coordinatesFront", methods=['POST'])
 def get_coordinatesFront():
