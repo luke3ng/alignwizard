@@ -354,7 +354,8 @@ def saveImages():
     left_image = get_saved_image(redis_client, 'left')
     right_image = get_saved_image(redis_client, 'right')
 
-    if not all([front_image, back_image, left_image, right_image]):
+    # Check if any image is None
+    if front_image is None or back_image is None or left_image is None or right_image is None:
         return jsonify({"error": "One or more images are missing"}), 400
 
     # Encode images to JPEG and upload to S3
@@ -380,6 +381,7 @@ def saveImages():
     db.session.commit()
 
     return jsonify({"message": "Successful Image Upload", "set_id": set_id})
+
 
 
 @app.route("/deleteImages")
