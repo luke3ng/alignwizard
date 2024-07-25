@@ -38,21 +38,23 @@ GLOBAL_IMAGES_KEY = "globalImages"
 SAVED_IMAGES_KEY = "savedImages"
 
 
-def upload_to_s3(file, filename, bucket_name, acl="public-read"):
+def upload_to_s3(file, filename, bucket_name):
     try:
+        app.logger.info(f"Uploading {filename} to S3 bucket {bucket_name}")
         s3.upload_fileobj(
             file,
             bucket_name,
             filename,
             ExtraArgs={
-                "ACL": acl,
                 "ContentType": "image/jpeg"
             }
         )
+        app.logger.info(f"Successfully uploaded {filename} to S3")
     except Exception as e:
-        app.logger.error(f"Something Happened: {e}")
+        app.logger.error(f"Failed to upload {filename} to S3: {e}")
         return None
     return f"https://{bucket_name}.s3.{S3_REGION}.amazonaws.com/{filename}"
+
 
 # Helper function to get Redis client
 def get_redis_client():
