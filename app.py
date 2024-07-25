@@ -38,21 +38,22 @@ GLOBAL_IMAGES_KEY = "globalImages"
 SAVED_IMAGES_KEY = "savedImages"
 
 
-def upload_to_s3(file, bucket_name, acl="public-read"):
+def upload_to_s3(file, filename, bucket_name, acl="public-read"):
     try:
         s3.upload_fileobj(
             file,
             bucket_name,
-            file.filename,
+            filename,
             ExtraArgs={
                 "ACL": acl,
-                "ContentType": file.content_type
+                "ContentType": "image/jpeg"
             }
         )
     except Exception as e:
-        print("Something Happened: ", e)
+        app.logger.error(f"Something Happened: {e}")
         return None
-    return f"https://postureimagebucket.s3.{S3_REGION}.amazonaws.com/{file.filename}"
+    return f"https://{bucket_name}.s3.{S3_REGION}.amazonaws.com/{filename}"
+
 # Helper function to get Redis client
 def get_redis_client():
     if 'redis_client' not in g:
@@ -359,14 +360,19 @@ def saveImages():
         return jsonify({"error": "One or more images are missing"}), 400
 
     # Encode images to JPEG and upload to S3
-    front_image_url = upload_to_s3(io.BytesIO(cv2.imencode('.jpg', front_image)[1]),
-                                   f"{patient.id}_set{set_id}_front.jpg", S3_BUCKET)
-    back_image_url = upload_to_s3(io.BytesIO(cv2.imencode('.jpg', back_image)[1]), f"{patient.id}_set{set_id}_back.jpg",
-                                  S3_BUCKET)
-    left_image_url = upload_to_s3(io.BytesIO(cv2.imencode('.jpg', left_image)[1]), f"{patient.id}_set{set_id}_left.jpg",
-                                  S3_BUCKET)
-    right_image_url = upload_to_s3(io.BytesIO(cv2.imencode('.jpg', right_image)[1]),
-                                   f"{patient.id}_set{set_id}_right.jpg", S3_BUCKET)
+    front_image_bytes = io.BytesIO(cv2.imencode('.jpg', front_image)[1])
+    back_image_bytes = io.BytesIO(cv2.imencode('.jpg', back_image)[1])
+    left_image_bytes = io.BytesIO(cv2.imencode('.jpg', left_image)[1])
+    right_image_bytes = io.BytesIO(cv2.imencode('.jpg', right_image)[1])
+
+    front_image_url = upload_to_s3(front_image_bytes, f"{patient.id}_set{set_id}_front.jpg", S3_BUCKET)
+    back_image_url = upload_to_s3(back_image_bytes, f"{patient.id}_set{set_id}_back.jpg", S3_BUCKET)
+    left_image_url = upload_to_s3(left_image_bytes, f"{patient.id}_set{set_id}_left.jpg", S3_BUCKET)
+    right_image_url = upload_to_s3(right_image_bytes, f"{patient.id}_set{set_id}_right.jpg", S3_BUCKET)
+
+    # Check if all URLs are generated
+    if not all([front_image_url, back_image_url, left_image_url, right_image_url]):
+        return jsonify({"error": "Failed to upload one or more images to S3"}), 500
 
     # Save URLs in the database
     new_image_record = Image(
