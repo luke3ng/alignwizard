@@ -7,14 +7,14 @@
 
 /* Color Variables */
 :root {
-  --primary-color: #32cd32; /* Light green */
-  --secondary-color: #87cefa; /* Light blue */
-  --background-color: #f0f8ff; /* Light gray */
+  --primary-color: #0056b3; /* Darker blue */
+  --secondary-color: #6c757d; /* Gray */
+  --background-color: #ffffff; /* Light gray */
   --text-color: #212529; /* Dark gray */
-  --header-background-color: #2e8b57; /* Sea green for header */
-  --button-background-color: #00bfff; /* Light blue for buttons */
-  --button-hover-color: #1e90ff; /* Dodger blue for button hover */
-  --overlay-color: rgba(0, 128, 0, 0.4); /* Green overlay */
+  --header-background-color: #343a40; /* Dark gray for header */
+  --button-background-color: #007bff; /* Blue for buttons */
+  --button-hover-color: #0056b3; /* Darker blue for button hover */
+  --overlay-color: rgba(0, 0, 0, 0.4); /* Slightly lighter overlay */
 }
 
 body {
