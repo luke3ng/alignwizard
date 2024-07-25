@@ -207,3 +207,17 @@ ul {
 .text-left {
   text-align: left;
 }
+
+.list-group-item {
+  color: var(--text-color);
+  background-color: var(--background-color);
+  border: 1px solid var(--secondary-color);
+  padding: 10px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+}
+
+.list-group-item:hover {
+  background-color: var(--button-hover-color);
+  color: #fff;
+}
