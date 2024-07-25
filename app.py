@@ -12,12 +12,16 @@ from datetime import datetime
 import logging
 from logging.handlers import RotatingFileHandler
 import redis
+import boto3
+import io
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:Halotop002%3F@alignwizarddb.cbmaie42gjxa.us-east-2.rds.amazonaws.com:5432/alignDB'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+S3_BUCKET = 'postureimagebucket'
+S3_REGION = 'us-east-2'
+s3 = boto3.client('s3', region_name=S3_REGION)
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -33,6 +37,22 @@ if not app.debug:
 GLOBAL_IMAGES_KEY = "globalImages"
 SAVED_IMAGES_KEY = "savedImages"
 
+
+def upload_to_s3(file, bucket_name, acl="public-read"):
+    try:
+        s3.upload_fileobj(
+            file,
+            bucket_name,
+            file.filename,
+            ExtraArgs={
+                "ACL": acl,
+                "ContentType": file.content_type
+            }
+        )
+    except Exception as e:
+        print("Something Happened: ", e)
+        return None
+    return f"https://postureimagebucket.s3.{S3_REGION}.amazonaws.com/{file.filename}"
 # Helper function to get Redis client
 def get_redis_client():
     if 'redis_client' not in g:
@@ -83,11 +103,12 @@ class Patient(db.Model):
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    image_front = db.Column(db.LargeBinary)
-    image_back = db.Column(db.LargeBinary)
-    image_left = db.Column(db.LargeBinary)
-    image_right = db.Column(db.LargeBinary)
+    image_front = db.Column(db.String, nullable=False)  # URL instead of binary
+    image_back = db.Column(db.String, nullable=False)   # URL instead of binary
+    image_left = db.Column(db.String, nullable=False)   # URL instead of binary
+    image_right = db.Column(db.String, nullable=False)  # URL instead of binary
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+
 
 def addUser(name, email, password):
     password_hash = generate_password_hash(password)
@@ -181,65 +202,57 @@ def findPatient():
     app.logger.info(f"Patient list for user {current_user.id}: {patientList}")
     return render_template("findPatient.html", patientList=patientList)
 
+
 @app.route("/patientHome")
 def patientHome():
-    patient = request.args.get('data')
-    patientid = db.session.execute(
-        db.select(Patient.id).filter_by(patient_name=patient, user_id=current_user.id)
-    ).scalar_one()
-    patientImages = db.session.execute(
-        db.select(Image).filter_by(patient_id=patientid).order_by(Image.date_created.desc())
+    patient_name = request.args.get('data')
+    patient = db.session.execute(
+        db.select(Patient).filter_by(patient_name=patient_name, user_id=current_user.id)
+    ).scalar_one_or_none()
+
+    if not patient:
+        return jsonify({"error": "Patient not found"}), 404
+
+    patient_images = db.session.execute(
+        db.select(Image).filter_by(patient_id=patient.id).order_by(Image.date_created.desc())
     ).scalars().all()
+
     image_data = []
-    for image in patientImages:
-        id = image.id
-        date = image.date_created
-        frontImage = image.image_front
-        image_front64 = base64.b64encode(frontImage).decode('utf-8')
-        backImage = image.image_back
-        image_back64 = base64.b64encode(backImage).decode('utf-8')
-        leftImage = image.image_left
-        image_left64 = base64.b64encode(leftImage).decode('utf-8')
-        rightImage = image.image_right
-        image_right64 = base64.b64encode(rightImage).decode('utf-8')
+    for image in patient_images:
         image_data.append({
-            "id": id,
-            "date": date,
-            "frontImage": image_front64,
-            "backImage": image_back64,
-            "leftImage": image_left64,
-            "rightImage": image_right64
+            "id": image.id,
+            "date": image.date_created,
+            "frontImage": image.image_front,
+            "backImage": image.image_back,
+            "leftImage": image.image_left,
+            "rightImage": image.image_right
         })
+
     return render_template("patientHome.html", data=image_data)
+
 
 @app.route("/compareImages")
 def compareImages():
     id1 = request.args.get('date1')
     id2 = request.args.get('date2')
     patient = request.args.get('patient')
-    patientImages = db.session.execute(
+    patient_images = db.session.execute(
         db.select(Image).filter(or_(Image.id == id1, Image.id == id2)).order_by(Image.date_created.desc())
     ).scalars().all()
+
     image_data = []
-    for image in patientImages:
-        date = image.date_created
-        frontImage = image.image_front
-        image_front64 = base64.b64encode(frontImage).decode('utf-8')
-        backImage = image.image_back
-        image_back64 = base64.b64encode(backImage).decode('utf-8')
-        leftImage = image.image_left
-        image_left64 = base64.b64encode(leftImage).decode('utf-8')
-        rightImage = image.image_right
-        image_right64 = base64.b64encode(rightImage).decode('utf-8')
+    for image in patient_images:
         image_data.append({
             "id": image.id,
-            "date": date,
-            "frontImage": image_front64,
-            "backImage": image_back64,
-            "leftImage": image_left64,
-            "rightImage": image_right64
+            "date": image.date_created,
+            "frontImage": image.image_front,
+            "backImage": image.image_back,
+            "leftImage": image.image_left,
+            "rightImage": image.image_right
         })
+
     return render_template("compareImages.html", data=image_data)
+
 
 @app.route("/enterNewPatient")
 def enterNewPatient():
@@ -321,48 +334,81 @@ def uploadImages():
             set_global_image(redis_client, 'imgRight', imgRight)
     return render_template("uploadImages.html")
 
+
 @app.route("/saveImages", methods=['POST'])
 def saveImages():
     redis_client = get_redis_client()
     data = request.json
     patientName = data['patientData']
-    patientID = db.session.execute(db.select(Patient.id).filter_by(patient_name=patientName)).scalar()
-    if patientID:
-        addImage(get_saved_image(redis_client, 'front'), get_saved_image(redis_client, 'back'), get_saved_image(redis_client, 'left'), get_saved_image(redis_client, 'right'), patientID)
-        return jsonify({"message": "Successful Image Upload"})
-    else:
-        return jsonify({"error": "Unsuccessful Image upload"})
+
+    # Generate a unique set_id based on the current timestamp
+    set_id = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    # Find the patient by name
+    patient = db.session.execute(db.select(Patient).filter_by(patient_name=patientName)).scalar()
+    if not patient:
+        return jsonify({"error": "Patient not found"}), 404
+
+    front_image = get_saved_image(redis_client, 'front')
+    back_image = get_saved_image(redis_client, 'back')
+    left_image = get_saved_image(redis_client, 'left')
+    right_image = get_saved_image(redis_client, 'right')
+
+    if not all([front_image, back_image, left_image, right_image]):
+        return jsonify({"error": "One or more images are missing"}), 400
+
+    # Encode images to JPEG and upload to S3
+    front_image_url = upload_to_s3(io.BytesIO(cv2.imencode('.jpg', front_image)[1]),
+                                   f"{patient.id}_set{set_id}_front.jpg", S3_BUCKET)
+    back_image_url = upload_to_s3(io.BytesIO(cv2.imencode('.jpg', back_image)[1]), f"{patient.id}_set{set_id}_back.jpg",
+                                  S3_BUCKET)
+    left_image_url = upload_to_s3(io.BytesIO(cv2.imencode('.jpg', left_image)[1]), f"{patient.id}_set{set_id}_left.jpg",
+                                  S3_BUCKET)
+    right_image_url = upload_to_s3(io.BytesIO(cv2.imencode('.jpg', right_image)[1]),
+                                   f"{patient.id}_set{set_id}_right.jpg", S3_BUCKET)
+
+    # Save URLs in the database
+    new_image_record = Image(
+        image_front=front_image_url,
+        image_back=back_image_url,
+        image_left=left_image_url,
+        image_right=right_image_url,
+        patient_id=patient.id
+    )
+
+    db.session.add(new_image_record)
+    db.session.commit()
+
+    return jsonify({"message": "Successful Image Upload", "set_id": set_id})
+
 
 @app.route("/deleteImages")
 def deleteImages():
     patient = request.args.get('data')
-    patientid = db.session.execute(
+    patient_id = db.session.execute(
         db.select(Patient.id).filter_by(patient_name=patient, user_id=current_user.id)
-    ).scalar_one()
-    patientImages = db.session.execute(
-        db.select(Image).filter_by(patient_id=patientid).order_by(Image.date_created.desc())
+    ).scalar_one_or_none()
+
+    if not patient_id:
+        return jsonify({"error": "Patient not found"}), 404
+
+    patient_images = db.session.execute(
+        db.select(Image).filter_by(patient_id=patient_id).order_by(Image.date_created.desc())
     ).scalars().all()
+
     image_data = []
-    for image in patientImages:
-        id = image.id
-        date = image.date_created
-        frontImage = image.image_front
-        image_front64 = base64.b64encode(frontImage).decode('utf-8')
-        backImage = image.image_back
-        image_back64 = base64.b64encode(backImage).decode('utf-8')
-        leftImage = image.image_left
-        image_left64 = base64.b64encode(leftImage).decode('utf-8')
-        rightImage = image.image_right
-        image_right64 = base64.b64encode(rightImage).decode('utf-8')
+    for image in patient_images:
         image_data.append({
-            "id": id,
-            "date": date,
-            "frontImage": image_front64,
-            "backImage": image_back64,
-            "leftImage": image_left64,
-            "rightImage": image_right64
+            "id": image.id,
+            "date": image.date_created,
+            "frontImage": image.image_front,
+            "backImage": image.image_back,
+            "leftImage": image.image_left,
+            "rightImage": image.image_right
         })
+
     return render_template("deleteImages.html", data=image_data)
+
 
 @app.route("/removeImages", methods=["POST"])
 def removeImages():
