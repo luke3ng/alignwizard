@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (patient) {
         document.getElementById('patientName').textContent = patient;
-
     }
 
     // Embed the data directly into the script
@@ -19,10 +18,10 @@ document.addEventListener("DOMContentLoaded", function() {
         const leftImg = document.getElementById(`left_img_${index}`);
         const rightImg = document.getElementById(`right_img_${index}`);
 
-        frontImg.src = 'data:image/jpeg;base64,' + item.frontImage;
-        backImg.src = 'data:image/jpeg;base64,' + item.backImage;
-        leftImg.src = 'data:image/jpeg;base64,' + item.leftImage;
-        rightImg.src = 'data:image/jpeg;base64,' + item.rightImage;
+        frontImg.src = item.frontImage;
+        backImg.src = item.backImage;
+        leftImg.src = item.leftImage;
+        rightImg.src = item.rightImage;
     });
 
     $('input[type=checkbox]').on('change', function (e) {
@@ -45,3 +44,4 @@ function redirect() {
     // Redirect to another page with the selected value as a query parameter
     window.location.href = `/compareImages?date1=${encodeURIComponent(dates[0])}&date2=${encodeURIComponent(dates[1])}&patient=${encodeURIComponent(patient)}`;
 }
+
