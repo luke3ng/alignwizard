@@ -10947,7 +10947,7 @@ header.masthead {
   padding-bottom: 6rem;
   text-align: center;
   color: #fff;
-   background: url('{{ url_for('static', filename='css/mastheadBackground.jpg') }}') no-repeat center center;
+background: url('{{ url_for('static', filename='css/mastheadBackground.jpg') }}') !important;
   background-repeat: no-repeat;
   background-attachment: scroll;
   background-position: center center;
