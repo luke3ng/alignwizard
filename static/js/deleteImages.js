@@ -17,10 +17,10 @@ document.addEventListener("DOMContentLoaded", function() {
         const leftImg = document.getElementById(`left_img_${index}`);
         const rightImg = document.getElementById(`right_img_${index}`);
 
-        if (frontImg) frontImg.src = 'data:image/jpeg;base64,' + item.frontImage;
-        if (backImg) backImg.src = 'data:image/jpeg;base64,' + item.backImage;
-        if (leftImg) leftImg.src = 'data:image/jpeg;base64,' + item.leftImage;
-        if (rightImg) rightImg.src = 'data:image/jpeg;base64,' + item.rightImage;
+        frontImg.src = item.frontImage;
+        backImg.src = item.backImage;
+        leftImg.src = item.leftImage;
+        rightImg.src = item.rightImage;
     });
 
     $('input[type=checkbox]').on('change', function (e) {
