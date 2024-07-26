@@ -11,8 +11,8 @@
             padding: 10px;
             text-align: center;
             box-sizing: border-box;
-            width: calc(55% - 40px); /* Adjust width to fit 2 columns */
-            height: 600px; /* Fixed height to contain the images */
+            width: calc(50% - 40px); /* Adjust width to fit 2 columns */
+            max-height: 600px; /* Fixed height to contain the images */
             position: relative; /* Needed for absolute positioning of the canvas */
         }
 
@@ -26,20 +26,25 @@
             cursor: crosshair;
         }
 
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
         img {
             object-fit: contain;
             width: 100%;
-            height: 80%; /* Adjust height to fill the parent div appropriately */
+            height: 100%;
             display: block;
-            margin: 0 auto;
         }
 
         canvas {
             position: absolute;
             top: 0;
             left: 0;
-            width: auto%;
-            height: 80%; /* Match image height */
+            width: 100%;
+            height: 100%;
             pointer-events: none; /* Allow clicks to pass through to the image */
         }
 
@@ -81,27 +86,35 @@
 </head>
 <body>
     <div class="container">
-        <div class="inputoutput">
-            <img id="imageSrcFront" alt="No Image" />
-            <canvas id="canvasFront"></canvas>
+        <div class="inputoutput" id="containerFront">
+            <div class="image-container">
+                <img id="imageSrcFront" alt="No Image" />
+                <canvas id="canvasFront"></canvas>
+            </div>
             <div class="caption">Front <input type="file" id="fileInputFront" name="fileInputFront" /></div>
             <button id="addLinesFront" type="button" class="button">Add lines</button>
         </div>
-        <div class="inputoutput">
-            <img id="imageSrcBack" alt="No Image" />
-            <canvas id="canvasBack"></canvas>
+        <div class="inputoutput" id="containerBack">
+            <div class="image-container">
+                <img id="imageSrcBack" alt="No Image" />
+                <canvas id="canvasBack"></canvas>
+            </div>
             <div class="caption">Back <input type="file" id="fileInputBack" name="fileInputBack" /></div>
             <button id="addLinesBack" type="button" class="button">Add lines</button>
         </div>
-        <div class="inputoutput">
-            <img id="imageSrcLeft" alt="No Image" />
-            <canvas id="canvasLeft"></canvas>
+        <div class="inputoutput" id="containerLeft">
+            <div class="image-container">
+                <img id="imageSrcLeft" alt="No Image" />
+                <canvas id="canvasLeft"></canvas>
+            </div>
             <div class="caption">Left <input type="file" id="fileInputLeft" name="fileInputLeft" /></div>
             <button id="addLinesLeft" type="button" class="button">Add lines</button>
         </div>
-        <div class="inputoutput">
-            <img id="imageSrcRight" alt="No Image" />
-            <canvas id="canvasRight"></canvas>
+        <div class="inputoutput" id="containerRight">
+            <div class="image-container">
+                <img id="imageSrcRight" alt="No Image" />
+                <canvas id="canvasRight"></canvas>
+            </div>
             <div class="caption">Right <input type="file" id="fileInputRight" name="fileInputRight" /></div>
             <button id="addLinesRight" type="button" class="button">Add lines</button>
         </div>
@@ -114,173 +127,175 @@
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <!-- Include your custom script -->
     <script type="text/javascript">
-function handleFileSelect(event, side) {
-    const file = event.target.files[0];
-    if (file) {
-        const fileType = file.type;
-        if (/^image\//.test(fileType)) {
-            const imgElement = document.createElement('img');
-            imgElement.src = URL.createObjectURL(file);
+        document.addEventListener("DOMContentLoaded", function() {
+            let modes = {
+                Front: false,
+                Back: false,
+                Left: false,
+                Right: false
+            };
 
-            imgElement.onload = function() {
-                // Get the natural dimensions of the image
-                const naturalWidth = imgElement.naturalWidth;
-                const naturalHeight = imgElement.naturalHeight;
+            function toggleMode(side) {
+                modes[side] = !modes[side];
+                if (modes[side]) {
+                    $("#imageSrc" + side).addClass("clickable");
+                    $("#addLines" + side).addClass("active").text("Lines Mode Active");
+                } else {
+                    $("#imageSrc" + side).removeClass("clickable");
+                    $("#addLines" + side).removeClass("active").text("Add lines");
+                }
+            }
 
-                // Create a new container with the same dimensions as the image
-                const newContainer = document.createElement("div");
-                newContainer.style.width = naturalWidth + "px";
-                newContainer.style.height = naturalHeight + "px";
-                newContainer.style.position = "relative"; // Ensure position context for the canvas
-                newContainer.style.border = "1px solid #000"; // Optional: Add a border for visibility
+            function handleFileSelect(event, side) {
+                const file = event.target.files[0];
+                if (file) {
+                    const fileType = file.type;
+                    if (/^image\//.test(fileType)) {
+                        const imgElement = document.createElement('img');
+                        imgElement.src = URL.createObjectURL(file);
 
-                // Adjust the imgElement to fit the new container
-                imgElement.style.width = "100%";
-                imgElement.style.height = "100%";
-                imgElement.style.objectFit = "contain";
+                        imgElement.onload = function() {
+                            // Get the natural dimensions of the image
+                            const naturalWidth = imgElement.naturalWidth;
+                            const naturalHeight = imgElement.naturalHeight;
 
-                // Create and set up the canvas
-                const canvas = document.createElement('canvas');
-                canvas.id = "canvas" + side;
-                canvas.width = naturalWidth;
-                canvas.height = naturalHeight;
-                canvas.style.position = "absolute";
-                canvas.style.top = "0";
-                canvas.style.left = "0";
+                            // Set canvas dimensions to match the image
+                            const canvas = document.getElementById("canvas" + side);
+                            canvas.width = naturalWidth;
+                            canvas.height = naturalHeight;
 
-                // Append imgElement and canvas to the new container
-                newContainer.appendChild(imgElement);
-                newContainer.appendChild(canvas);
+                            // Adjust the canvas style to match the image container
+                            canvas.style.width = "100%";
+                            canvas.style.height = "100%";
 
-                // Find the old container and replace it with the new container
-                const parentContainer = document.getElementById("container" + side);
-                parentContainer.innerHTML = ""; // Clear existing content
-                parentContainer.appendChild(newContainer);
+                            // Create a new container with the same dimensions as the image
+                            const newContainer = document.createElement("div");
+                            newContainer.className = "image-container";
+                            newContainer.style.width = "100%";
+                            newContainer.style.height = "100%";
+                            newContainer.style.position = "relative";
 
-                const ctx = canvas.getContext("2d");
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            // Adjust the imgElement to fit the new container
+                            imgElement.style.width = "100%";
+                            imgElement.style.height = "100%";
+                            imgElement.style.objectFit = "contain";
 
-                imgElement.addEventListener("click", function(event) {
-                    if (modes[side]) {
-                        const rect = imgElement.getBoundingClientRect();
-                        const x = event.clientX - rect.left;
-                        const y = event.clientY - rect.top;
+                            // Append imgElement and canvas to the new container
+                            newContainer.appendChild(imgElement);
+                            newContainer.appendChild(canvas);
 
-                        // Clear the canvas
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            // Find the old container and replace it with the new container
+                            const parentContainer = document.getElementById("container" + side);
+                            parentContainer.innerHTML = ""; // Clear existing content
+                            parentContainer.appendChild(newContainer);
 
-                        // Draw the cross
-                        ctx.beginPath
-                        ctx.lineTo(x, canvas.height);
-                        ctx.moveTo(0, y);
-                        ctx.lineTo(canvas.width, y);
-                        ctx.strokeStyle = "black";
-                        ctx.lineWidth = 2;
-                        ctx.stroke();
+                            const ctx = canvas.getContext("2d");
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                        // Send coordinates to server
-                        $.ajax({
-                            type: "POST",
-                            url: "/get_coordinates" + side,
-                            data: JSON.stringify({ ["x" + side]: x, ["y" + side]: y, width: rect.width, height: rect.height }),
-                            contentType: "application/json",
-                            success: function(response) {
-                                console.log(response);
-                                if (response.image) {
-                                    imgElement.src = "data:image/png;base64," + response.image;
+                            imgElement.addEventListener("click", function(event) {
+                                if (modes[side]) {
+                                    const rect = imgElement.getBoundingClientRect();
+                                    const x = event.clientX - rect.left;
+                                    const y = event.clientY - rect.top;
+
+                                    // Clear the canvas
+                                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                                    // Draw the cross
+                                    ctx.beginPath();
+                                    ctx.moveTo(x, 0);
+                                    ctx.lineTo(x, canvas.height);
+                                    ctx.moveTo(0, y);
+                                    ctx.lineTo(canvas.width, y);
+                                    ctx.strokeStyle = "black";
+                                    ctx.lineWidth = 2;
+                                    ctx.stroke();
+
+                                    // Send coordinates to server
+                                    $.ajax({
+                                        type: "POST",
+                                        url: "/get_coordinates" + side,
+                                        data: JSON.stringify({ ["x" + side]: x, ["y" + side]: y, width: rect.width, height: rect.height }),
+                                        contentType: "application/json",
+                                        success: function(response) {
+                                            console.log(response);
+                                            if (response.image) {
+                                                imgElement.src = "data:image/png;base64," + response.image;
+                                            }
+                                        },
+                                        error: function(error) {
+                                            console.error("Error:", error);
+                                        }
+                                    });
                                 }
-                            },
-                            error: function(error) {
-                                console.error("Error:", error);
-                            }
+                            });
+
+                            // Upload image to server
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                const imgData = event.target.result;
+                                console.log("Uploading image for side:", side);
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/upload" + side,
+                                    data: JSON.stringify({ ["img" + side]: imgData }),
+                                    contentType: "application/json",
+                                    success: function(response) {
+                                        console.log("Image upload successful for side:", side);
+                                        console.log(response);
+                                    },
+                                    error: function(error) {
+                                        console.error("Image upload failed for side:", side);
+                                        console.error("Error:", error);
+                                    }
+                                });
+                            };
+                            reader.readAsDataURL(file);
+                        };
+                    }
+                }
+            }
+
+            ["Front", "Back", "Left", "Right"].forEach(function(side) {
+                $("#addLines" + side).click(function() {
+                    toggleMode(side);
+                });
+
+                $("#fileInput" + side).on("change", function(event) {
+                    console.log("File input changed for side:", side); // Debugging log
+                    handleFileSelect(event, side);
+                });
+            });
+
+            // Save images button click event
+            document.getElementById("saveImages").addEventListener("click", function(event) {
+                event.preventDefault(); // Prevent default form submission behavior
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const patientData = urlParams.get('data');
+
+                fetch("/saveImages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ patientData: patientData })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = `/patientHome?data=${patientData}`;
+                    } else {
+                        return response.json().then(data => {
+                            throw new Error(data.error);
                         });
                     }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Save failed: " + error.message); // Show error message
                 });
-
-                // Upload image to server
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const imgData = event.target.result;
-                    console.log("Uploading image for side:", side);
-                    $.ajax({
-                        type: "POST",
-                        url: "/upload" + side,
-                        data: JSON.stringify({ ["img" + side]: imgData }),
-                        contentType: "application/json",
-                        success: function(response) {
-                            console.log("Image upload successful for side:", side);
-                            console.log(response);
-                        },
-                        error: function(error) {
-                            console.error("Image upload failed for side:", side);
-                            console.error("Error:", error);
-                        }
-                    });
-                };
-                reader.readAsDataURL(file);
-            };
-        }
-    }
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-    let modes = {
-        Front: false,
-        Back: false,
-        Left: false,
-        Right: false
-    };
-
-    function toggleMode(side) {
-        modes[side] = !modes[side];
-        if (modes[side]) {
-            $("#addLines" + side).addClass("active").text("Lines Mode Active");
-        } else {
-            $("#addLines" + side).removeClass("active").text("Add lines");
-        }
-    }
-
-    ["Front", "Back", "Left", "Right"].forEach(function(side) {
-        $("#addLines" + side).click(function() {
-            toggleMode(side);
+            });
         });
-
-        $("#fileInput" + side).on("change", function(event) {
-            console.log("File input changed for side:", side); // Debugging log
-            handleFileSelect(event, side);
-        });
-    });
-
-    // Save images button click event
-    document.getElementById("saveImages").addEventListener("click", function(event) {
-        event.preventDefault(); // Prevent default form submission behavior
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const patientData = urlParams.get('data');
-
-        fetch("/saveImages", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ patientData: patientData })
-        })
-        .then(response => {
-            if (response.ok) {
-                window.location.href = `/patientHome?data=${patientData}`;
-            } else {
-                return response.json().then(data => {
-                    throw new Error(data.error);
-                });
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("Save failed: " + error.message); // Show error message
-        });
-    });
-});
-
     </script>
 </body>
 </html>
