@@ -12,7 +12,7 @@
             text-align: center;
             box-sizing: border-box;
             width: calc(55% - 40px); /* Adjust width to fit 2 columns */
-            height: auto; /* Adjust height to fit content */
+            height: 600px; /* Fixed height to contain the images */
             position: relative; /* Needed for absolute positioning of the canvas */
         }
 
@@ -29,7 +29,7 @@
         img {
             object-fit: contain;
             width: 100%;
-            height: auto; /* Adjust height to fill the parent div appropriately */
+            height: 80%; /* Adjust height to fill the parent div appropriately */
             display: block;
             margin: 0 auto;
         }
@@ -38,8 +38,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%; /* Match image height */
+            width: auto%;
+            height: 80%; /* Match image height */
             pointer-events: none; /* Allow clicks to pass through to the image */
         }
 
@@ -82,34 +82,26 @@
 <body>
     <div class="container">
         <div class="inputoutput">
-            <div id="newContainerFront">
-                <img id="imageSrcFront" alt="No Image" />
-                <canvas id="canvasFront"></canvas>
-            </div>
+            <img id="imageSrcFront" alt="No Image" />
+            <canvas id="canvasFront"></canvas>
             <div class="caption">Front <input type="file" id="fileInputFront" name="fileInputFront" /></div>
             <button id="addLinesFront" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <div id="newContainerBack">
-                <img id="imageSrcBack" alt="No Image" />
-                <canvas id="canvasBack"></canvas>
-            </div>
+            <img id="imageSrcBack" alt="No Image" />
+            <canvas id="canvasBack"></canvas>
             <div class="caption">Back <input type="file" id="fileInputBack" name="fileInputBack" /></div>
             <button id="addLinesBack" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <div id="newContainerLeft">
-                <img id="imageSrcLeft" alt="No Image" />
-                <canvas id="canvasLeft"></canvas>
-            </div>
+            <img id="imageSrcLeft" alt="No Image" />
+            <canvas id="canvasLeft"></canvas>
             <div class="caption">Left <input type="file" id="fileInputLeft" name="fileInputLeft" /></div>
             <button id="addLinesLeft" type="button" class="button">Add lines</button>
         </div>
         <div class="inputoutput">
-            <div id="newContainerRight">
-                <img id="imageSrcRight" alt="No Image" />
-                <canvas id="canvasRight"></canvas>
-            </div>
+            <img id="imageSrcRight" alt="No Image" />
+            <canvas id="canvasRight"></canvas>
             <div class="caption">Right <input type="file" id="fileInputRight" name="fileInputRight" /></div>
             <button id="addLinesRight" type="button" class="button">Add lines</button>
         </div>
@@ -149,46 +141,23 @@
                         const imgElement = document.getElementById(imgElementId);
                         imgElement.src = URL.createObjectURL(file);
 
-                        imgElement.onload = function() {
-                            // Get the natural dimensions of the image
-                            const naturalWidth = imgElement.naturalWidth;
-                            const naturalHeight = imgElement.naturalHeight;
-
-                            // Create a new container with the same dimensions as the image
-                            const newContainer = document.createElement("div");
-                            newContainer.style.width = naturalWidth + "px";
-                            newContainer.style.height = naturalHeight + "px";
-                            newContainer.style.position = "relative"; // Ensure position context for the canvas
-                            newContainer.style.border = "1px solid #000"; // Optional: Add a border for visibility
-
-                            // Move the image and canvas to the new container
-                            imgElement.style.width = "100%";
-                            imgElement.style.height = "100%";
-                            imgElement.style.objectFit = "contain";
-
+                        const img = new Image();
+                        img.src = imgElement.src;
+                        img.onload = function() {
                             const canvas = document.getElementById(canvasElementId);
-                            canvas.style.position = "absolute";
-                            canvas.style.top = "0";
-                            canvas.style.left = "0";
-                            canvas.width = naturalWidth;
-                            canvas.height = naturalHeight;
-
-                            newContainer.appendChild(imgElement);
-                            newContainer.appendChild(canvas);
-
-                            // Replace the old container with the new container
-                            const parentContainer = imgElement.parentElement;
-                            parentContainer.innerHTML = ""; // Clear existing content
-                            parentContainer.appendChild(newContainer);
-
                             const ctx = canvas.getContext("2d");
+                            const displayWidth = imgElement.offsetWidth;
+                            const displayHeight = imgElement.offsetHeight;
+                            canvas.width = displayWidth;
+                            canvas.height = displayHeight;
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                             imgElement.addEventListener("click", function(event) {
                                 if (modes[side]) {
                                     const rect = imgElement.getBoundingClientRect();
-                                    const x = event.clientX - rect.left;
-                                    const y = event.clientY - rect.top;
+                                    const x = event.clientX - rect.left; // Coordinates relative to the image
+                                    const y = event.clientY - rect.top;  // Coordinates relative to the image
+                                    console.log("Client-side coordinates:", x, y, "Image dimensions:", rect.width, rect.height);
 
                                     // Clear the canvas
                                     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -226,18 +195,18 @@
                             const reader = new FileReader();
                             reader.onload = function(event) {
                                 const imgData = event.target.result;
-                                console.log("Uploading image for side:", side);
+                                console.log("Uploading image for side:", side); // Debugging log
                                 $.ajax({
                                     type: "POST",
                                     url: "/upload" + side,
                                     data: JSON.stringify({ ["img" + side]: imgData }),
                                     contentType: "application/json",
                                     success: function(response) {
-                                        console.log("Image upload successful for side:", side);
+                                        console.log("Image upload successful for side:", side); // Debugging log
                                         console.log(response);
                                     },
                                     error: function(error) {
-                                        console.error("Image upload failed for side:", side);
+                                        console.error("Image upload failed for side:", side); // Debugging log
                                         console.error("Error:", error);
                                     }
                                 });
@@ -254,7 +223,7 @@
                 });
 
                 $("#fileInput" + side).on("change", function(event) {
-                    console.log("File input changed for side:", side);
+                    console.log("File input changed for side:", side); // Debugging log
                     handleFileSelect(event, "imageSrc" + side, "canvas" + side, side);
                 });
             });
