@@ -11,7 +11,8 @@
             padding: 10px;
             text-align: center;
             box-sizing: border-box;
-            width: calc(55% - 40px); /* Adjust width to fit 2 columns */
+            width: calc(50% - 40px); /* Adjust width to fit 2 columns */
+            max-height: 600px; /* Fixed height to contain the images */
             position: relative; /* Needed for absolute positioning of the canvas */
         }
 
@@ -25,18 +26,25 @@
             cursor: crosshair;
         }
 
-        .image-container img {
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        img {
             object-fit: contain;
             width: 100%;
-            height: auto; /* Adjust height to fill the parent div appropriately */
+            height: 100%;
             display: block;
-            margin: 0 auto;
         }
 
         canvas {
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none; /* Allow clicks to pass through to the image */
         }
 
@@ -270,4 +278,3 @@
     </script>
 </body>
 </html>
-
