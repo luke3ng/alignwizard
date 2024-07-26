@@ -11052,6 +11052,21 @@ section#contact form#contactForm :-ms-input-placeholder {
   top: 15%; /* Adjust top position as needed */
   left: 15%; /* Adjust left position as needed */
         }
+#homeSignUp {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 1em;
+  color: #fff !important;
+  background-color: var(--button-background-color) !important;
+  border: none !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add box shadow for buttons */
+}
+
+#homeSignUp:hover {
+  background-color: var(--button-hover-color) !important;
+}
 
 .footer {
   text-align: center;
