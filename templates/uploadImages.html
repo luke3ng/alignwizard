@@ -114,148 +114,149 @@
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <!-- Include your custom script -->
     <script type="text/javascript">
- document.addEventListener("DOMContentLoaded", function() {
-    let modes = {
-        Front: false,
-        Back: false,
-        Left: false,
-        Right: false
-    };
+        document.addEventListener("DOMContentLoaded", function() {
+            let modes = {
+                Front: false,
+                Back: false,
+                Left: false,
+                Right: false
+            };
 
-    function toggleMode(side) {
-        modes[side] = !modes[side];
-        if (modes[side]) {
-            $("#imageSrc" + side).addClass("clickable");
-            $("#addLines" + side).addClass("active").text("Lines Mode Active");
-        } else {
-            $("#imageSrc" + side).removeClass("clickable");
-            $("#addLines" + side).removeClass("active").text("Add lines");
-        }
-    }
+            function toggleMode(side) {
+                modes[side] = !modes[side];
+                if (modes[side]) {
+                    $("#imageSrc" + side).addClass("clickable");
+                    $("#addLines" + side).addClass("active").text("Lines Mode Active");
+                } else {
+                    $("#imageSrc" + side).removeClass("clickable");
+                    $("#addLines" + side).removeClass("active").text("Add lines");
+                }
+            }
 
-    function handleFileSelect(event, imgElementId, canvasElementId, side) {
-        const file = event.target.files[0];
-        if (file) {
-            const fileType = file.type;
-            if (/^image\//.test(fileType)) {
-                const imgElement = document.getElementById(imgElementId);
-                imgElement.src = URL.createObjectURL(file);
+            function handleFileSelect(event, imgElementId, canvasElementId, side) {
+                const file = event.target.files[0];
+                if (file) {
+                    const fileType = file.type;
+                    if (/^image\//.test(fileType)) {
+                        const imgElement = document.getElementById(imgElementId);
+                        imgElement.src = URL.createObjectURL(file);
 
-                imgElement.onload = function() {
-                    const canvas = document.getElementById(canvasElementId);
-                    const ctx = canvas.getContext("2d");
-                    const displayWidth = imgElement.naturalWidth;
-                    const displayHeight = imgElement.naturalHeight;
-                    canvas.width = displayWidth;
-                    canvas.height = displayHeight;
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                    imgElement.addEventListener("click", function(event) {
-                        if (modes[side]) {
-                            const rect = imgElement.getBoundingClientRect();
-                            const x = event.clientX - rect.left; // Coordinates relative to the image
-                            const y = event.clientY - rect.top;  // Coordinates relative to the image
-                            console.log("Client-side coordinates:", x, y, "Image dimensions:", rect.width, rect.height);
-
-                            // Clear the canvas
+                        const img = new Image();
+                        img.src = imgElement.src;
+                        img.onload = function() {
+                            const canvas = document.getElementById(canvasElementId);
+                            const ctx = canvas.getContext("2d");
+                            const displayWidth = imgElement.offsetWidth;
+                            const displayHeight = imgElement.offsetHeight;
+                            canvas.width = displayWidth;
+                            canvas.height = displayHeight;
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                            // Draw the cross
-                            ctx.beginPath();
-                            ctx.moveTo(x, 0);
-                            ctx.lineTo(x, canvas.height);
-                            ctx.moveTo(0, y);
-                            ctx.lineTo(canvas.width, y);
-                            ctx.strokeStyle = "black";
-                            ctx.lineWidth = 2;
-                            ctx.stroke();
+                            imgElement.addEventListener("click", function(event) {
+                                if (modes[side]) {
+                                    const rect = imgElement.getBoundingClientRect();
+                                    const x = event.clientX - rect.left; // Coordinates relative to the image
+                                    const y = event.clientY - rect.top;  // Coordinates relative to the image
+                                    console.log("Client-side coordinates:", x, y, "Image dimensions:", rect.width, rect.height);
 
-                            // Send coordinates to server
-                            $.ajax({
-                                type: "POST",
-                                url: "/get_coordinates" + side,
-                                data: JSON.stringify({ ["x" + side]: x, ["y" + side]: y, displayWidth: rect.width, displayHeight: rect.height }),
-                                contentType: "application/json",
-                                success: function(response) {
-                                    console.log(response);
-                                    if (response.image) {
-                                        $("#imageSrc" + side).attr("src", "data:image/png;base64," + response.image);
-                                    }
-                                },
-                                error: function(error) {
-                                    console.error("Error:", error);
+                                    // Clear the canvas
+                                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                                    // Draw the cross
+                                    ctx.beginPath();
+                                    ctx.moveTo(x, 0);
+                                    ctx.lineTo(x, canvas.height);
+                                    ctx.moveTo(0, y);
+                                    ctx.lineTo(canvas.width, y);
+                                    ctx.strokeStyle = "black";
+                                    ctx.lineWidth = 2;
+                                    ctx.stroke();
+
+                                    // Send coordinates to server
+                                    $.ajax({
+                                        type: "POST",
+                                        url: "/get_coordinates" + side,
+                                        data: JSON.stringify({ ["x" + side]: x, ["y" + side]: y, width: rect.width, height: rect.height }),
+                                        contentType: "application/json",
+                                        success: function(response) {
+                                            console.log(response);
+                                            if (response.image) {
+                                                $("#imageSrc" + side).attr("src", "data:image/png;base64," + response.image);
+                                            }
+                                        },
+                                        error: function(error) {
+                                            console.error("Error:", error);
+                                        }
+                                    });
                                 }
                             });
-                        }
-                    });
 
-                    // Upload image to server
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        const imgData = event.target.result;
-                        console.log("Uploading image for side:", side); // Debugging log
-                        $.ajax({
-                            type: "POST",
-                            url: "/upload" + side,
-                            data: JSON.stringify({ ["img" + side]: imgData }),
-                            contentType: "application/json",
-                            success: function(response) {
-                                console.log("Image upload successful for side:", side); // Debugging log
-                                console.log(response);
-                            },
-                            error: function(error) {
-                                console.error("Image upload failed for side:", side); // Debugging log
-                                console.error("Error:", error);
-                            }
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                };
+                            // Upload image to server
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                const imgData = event.target.result;
+                                console.log("Uploading image for side:", side); // Debugging log
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/upload" + side,
+                                    data: JSON.stringify({ ["img" + side]: imgData }),
+                                    contentType: "application/json",
+                                    success: function(response) {
+                                        console.log("Image upload successful for side:", side); // Debugging log
+                                        console.log(response);
+                                    },
+                                    error: function(error) {
+                                        console.error("Image upload failed for side:", side); // Debugging log
+                                        console.error("Error:", error);
+                                    }
+                                });
+                            };
+                            reader.readAsDataURL(file);
+                        };
+                    }
+                }
             }
-        }
-    }
 
-    ["Front", "Back", "Left", "Right"].forEach(function(side) {
-        $("#addLines" + side).click(function() {
-            toggleMode(side);
-        });
-
-        $("#fileInput" + side).on("change", function(event) {
-            console.log("File input changed for side:", side); // Debugging log
-            handleFileSelect(event, "imageSrc" + side, "canvas" + side, side);
-        });
-    });
-
-    // Save images button click event
-    document.getElementById("saveImages").addEventListener("click", function(event) {
-        event.preventDefault(); // Prevent default form submission behavior
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const patientData = urlParams.get('data');
-
-        fetch("/saveImages", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ patientData: patientData })
-        })
-        .then(response => {
-            if (response.ok) {
-                window.location.href = `/patientHome?data=${patientData}`;
-            } else {
-                return response.json().then(data => {
-                    throw new Error(data.error);
+            ["Front", "Back", "Left", "Right"].forEach(function(side) {
+                $("#addLines" + side).click(function() {
+                    toggleMode(side);
                 });
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("Save failed: " + error.message); // Show error message
-        });
-    });
-});
 
+                $("#fileInput" + side).on("change", function(event) {
+                    console.log("File input changed for side:", side); // Debugging log
+                    handleFileSelect(event, "imageSrc" + side, "canvas" + side, side);
+                });
+            });
+
+            // Save images button click event
+            document.getElementById("saveImages").addEventListener("click", function(event) {
+                event.preventDefault(); // Prevent default form submission behavior
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const patientData = urlParams.get('data');
+
+                fetch("/saveImages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ patientData: patientData })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = `/patientHome?data=${patientData}`;
+                    } else {
+                        return response.json().then(data => {
+                            throw new Error(data.error);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Save failed: " + error.message); // Show error message
+                });
+            });
+        });
     </script>
 </body>
 </html>
