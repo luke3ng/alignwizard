@@ -106,16 +106,19 @@ header {
 
 /* Navbar styles */
 nav.navbar.custom-navbar {
-  background-color: var(--header-background-color) !important;
+  background-color: #000000 !important; /* Set background color to black */
+  padding: 1.5rem 1rem; /* Increase padding for a larger navbar */
 }
 
 nav.navbar.custom-navbar .navbar-brand,
 nav.navbar.custom-navbar .nav-link {
-  color: #ffffff !important;
+  color: #ffffff !important; /* Ensure text is white for contrast */
+  font-size: 1.1rem; /* Increase font size for sharper text */
+  font-weight: bold; /* Optional: make the text bold */
 }
 
 nav.navbar.custom-navbar .nav-link:hover {
-  color: #cccccc !important;
+  color: #cccccc !important; /* Slight color change on hover */
 }
 
 /* Page specific styles */
