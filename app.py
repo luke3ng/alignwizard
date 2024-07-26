@@ -480,19 +480,17 @@ def get_coordinatesFront():
     data = request.json
     x = data['xFront']
     y = data['yFront']
-    display_width = data['displayWidth']
-    display_height = data['displayHeight']
-    app.logger.info(f"Received coordinates for front: ({x}, {y}), display dimensions: {display_width}x{display_height}")
+    width = data['width']
+    height = data['height']
+    app.logger.info(f"Received coordinates for front: ({x}, {y}), width: {width}, height: {height}")
 
     imgFront = get_global_image(redis_client, 'imgFront')
     if imgFront is not None:
         img_copy = imgFront.copy()
-        actual_height, actual_width = img_copy.shape[:2]  # Get the actual dimensions of the image
-        x_scaled, y_scaled = scale_coordinates(x, y, display_width, display_height, actual_width, actual_height)
-        processed_image = drawCross(img_copy, x_scaled, y_scaled, actual_width, actual_height)
+        processed_image = drawCross(img_copy, x, y, width, height)
         set_saved_image(redis_client, "front", processed_image)
 
-        return jsonify({"message": "Coordinates received and processed successfully."})
+        return jsonify({"message": "Coordinates received successfully."})
     else:
         app.logger.error("imgFront not found in globalImages")
         return jsonify({"error": "imgFront not found"}), 400
