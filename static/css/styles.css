@@ -11049,8 +11049,7 @@ section#contact form#contactForm :-ms-input-placeholder {
 .fa-stack-1x.fa-inverse.fa-male {
   transform: scale(4); /* Adjust scale as needed */
   position: absolute;
-  top: 15%; /* Adjust top position as needed */
-  left: 15%; /* Adjust left position as needed */
+
         }
 
 .footer {
