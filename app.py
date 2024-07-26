@@ -495,7 +495,7 @@ def get_coordinatesFront():
         processed_image = drawCross(img_copy, x, y, width, height)
         set_saved_image(redis_client, "front", processed_image)
 
-        return jsonify({"message": "Coordinates received successfully."})
+        return jsonify({"message": "Coordinates received successfully.", "image": processed_image})
     else:
         app.logger.error("imgFront not found in globalImages")
         return jsonify({"error": "imgFront not found"}), 400
