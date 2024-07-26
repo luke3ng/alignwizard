@@ -37,8 +37,7 @@
         canvas {
             position: absolute;
             top: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
             pointer-events: none; /* Allow clicks to pass through to the image */
         }
 
@@ -151,10 +150,8 @@
 
                             const canvas = document.getElementById(canvasElementId);
                             const ctx = canvas.getContext("2d");
-                            canvas.width = displayWidth;
-                            canvas.height = displayHeight;
-                            canvas.style.width = displayWidth + "px";
-                            canvas.style.height = displayHeight + "px";
+                            canvas.width = imgElement.offsetWidth;
+                            canvas.height = imgElement.offsetHeight;
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                             imgElement.addEventListener("click", function(event) {
