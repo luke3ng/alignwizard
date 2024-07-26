@@ -53,15 +53,7 @@ def delete_s3_object(url):
         print(f"Deleted {key} from {bucket_name}")
     except Exception as e:
         print(f"Error deleting object {key} from {bucket_name}: {e}")
-def generate_presigned_url(bucket_name, object_name, expiration=3600):
-    try:
-        response = s3_client.generate_presigned_url('get_object',
-                                                    Params={'Bucket': bucket_name, 'Key': object_name},
-                                                    ExpiresIn=expiration)
-    except Exception as e:
-        app.logger.error(f"Error generating presigned URL: {e}")
-        return None
-    return response
+
 
 # Function to upload to S3
 def upload_to_s3(file, filename, bucket_name):
