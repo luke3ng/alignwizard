@@ -12,7 +12,7 @@
             text-align: center;
             box-sizing: border-box;
             width: calc(55% - 40px); /* Adjust width to fit 2 columns */
-            height: 600px; /* Fixed height to contain the images */
+            height: auto; /* Allow height to be auto-adjusted */
             position: relative; /* Needed for absolute positioning of the canvas */
         }
 
@@ -28,8 +28,8 @@
 
         img {
             object-fit: contain;
-            width: 100%;
-            height: 80%; /* Adjust height to fill the parent div appropriately */
+            max-width: 100%;
+            max-height: 600px; /* Max height to contain the image */
             display: block;
             margin: 0 auto;
         }
@@ -38,8 +38,6 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: auto%;
-            height: 80%; /* Match image height */
             pointer-events: none; /* Allow clicks to pass through to the image */
         }
 
@@ -144,10 +142,14 @@
                         const img = new Image();
                         img.src = imgElement.src;
                         img.onload = function() {
+                            const aspectRatio = img.width / img.height;
+                            const displayHeight = 600; // Fixed height
+                            const displayWidth = displayHeight * aspectRatio; // Maintain aspect ratio
+                            imgElement.style.width = displayWidth + "px";
+                            imgElement.style.height = displayHeight + "px";
+
                             const canvas = document.getElementById(canvasElementId);
                             const ctx = canvas.getContext("2d");
-                            const displayWidth = imgElement.offsetWidth;
-                            const displayHeight = imgElement.offsetHeight;
                             canvas.width = displayWidth;
                             canvas.height = displayHeight;
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
