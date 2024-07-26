@@ -11057,7 +11057,7 @@ section#contact form#contactForm :-ms-input-placeholder {
   padding: 10px 20px;
   font-size: 1em;
   color: #fff !important;
-  background-color: var(--button-background-color) !important;
+  background-color: #007bff !important;
   border: none !important;
   border-radius: 5px !important;
   cursor: pointer !important;
@@ -11065,7 +11065,7 @@ section#contact form#contactForm :-ms-input-placeholder {
 }
 
 #homeSignUp:hover {
-  background-color: var(--button-hover-color) !important;
+  background-color: #0056b3 !important;
 }
 
 .footer {
