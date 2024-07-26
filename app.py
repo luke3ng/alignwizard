@@ -391,7 +391,42 @@ def saveImages():
         app.logger.error("One or more images are missing")
         return jsonify({"error": "One or more images are missing"}), 400
 
-    # Encode images to JPEG and upload to S
+    # Encode images to JPEG and upload to S3
+    try:
+        front_image_bytes = io.BytesIO(cv2.imencode('.jpg', front_image)[1])
+        back_image_bytes = io.BytesIO(cv2.imencode('.jpg', back_image)[1])
+        left_image_bytes = io.BytesIO(cv2.imencode('.jpg', left_image)[1])
+        right_image_bytes = io.BytesIO(cv2.imencode('.jpg', right_image)[1])
+
+        front_image_url = upload_to_s3(front_image_bytes, f"{patient.id}_set{set_id}_front.jpg", S3_BUCKET)
+        back_image_url = upload_to_s3(back_image_bytes, f"{patient.id}_set{set_id}_back.jpg", S3_BUCKET)
+        left_image_url = upload_to_s3(left_image_bytes, f"{patient.id}_set{set_id}_left.jpg", S3_BUCKET)
+        right_image_url = upload_to_s3(right_image_bytes, f"{patient.id}_set{set_id}_right.jpg", S3_BUCKET)
+
+        # Check if all URLs are generated
+        if not all([front_image_url, back_image_url, left_image_url, right_image_url]):
+            app.logger.error("Failed to upload one or more images to S3")
+            return jsonify({"error": "Failed to upload one or more images to S3"}), 500
+
+        # Save URLs in the database
+        new_image_record = Image(
+            image_front=front_image_url,
+            image_back=back_image_url,
+            image_left=left_image_url,
+            image_right=right_image_url,
+            patient_id=patient.id
+        )
+
+        db.session.add(new_image_record)
+        db.session.commit()
+
+        app.logger.info("Successfully uploaded images and saved to database")
+        return jsonify({"message": "Successful Image Upload", "set_id": set_id})
+
+    except Exception as e:
+        app.logger.error(f"An error occurred during image upload and save process: {e}")
+        return jsonify({"error": "An error occurred during the image upload process"}), 500
+
 
 
 
