@@ -28,7 +28,7 @@ s3_client = boto3.client('s3', region_name=S3_REGION)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'loginPage'
-CLOUDFRONT_DOMAIN = os.environ.get('CLOUDFRONT_DOMAIN', 'https://d18t3ps388njbv.cloudfront.net')
+CLOUDFRONT_DOMAIN = os.environ.get('CLOUDFRONT_DOMAIN', 'd18t3ps388njbv.cloudfront.net')
 
 # Set up logging
 if not app.debug:
