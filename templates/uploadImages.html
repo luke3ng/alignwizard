@@ -32,11 +32,6 @@
             max-height: 100%;
             display: block;
             margin: 0 auto;
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
         }
 
         canvas {
@@ -146,19 +141,21 @@
                         imgElement.src = URL.createObjectURL(file);
 
                         imgElement.onload = function() {
+                            // Ensure the canvas matches the image dimensions
                             const imgWidth = imgElement.naturalWidth;
                             const imgHeight = imgElement.naturalHeight;
-                            const containerWidth = imgElement.offsetWidth;
-                            const containerHeight = imgElement.offsetHeight;
 
-                            if (imgWidth / imgHeight > containerWidth / containerHeight) {
-                                canvas.width = containerWidth;
-                                canvas.height = containerWidth * (imgHeight / imgWidth);
-                            } else {
-                                canvas.width = containerHeight * (imgWidth / imgHeight);
-                                canvas.height = containerHeight;
-                            }
+                            const containerWidth = imgElement.width;
+                            const containerHeight = imgElement.height;
 
+                            const canvasWidth = containerWidth;
+                            const canvasHeight = containerHeight;
+
+                            canvas.width = canvasWidth;
+                            canvas.height = canvasHeight;
+
+                            canvas.style.width = canvasWidth + 'px';
+                            canvas.style.height = canvasHeight + 'px';
                             canvas.style.top = imgElement.offsetTop + 'px';
                             canvas.style.left = imgElement.offsetLeft + 'px';
 
