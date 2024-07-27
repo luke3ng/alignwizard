@@ -15,6 +15,7 @@ import redis
 import boto3
 import io
 from urllib.parse import urlparse
+import flask_session
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
@@ -22,7 +23,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:Halotop0
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'session:'
+app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379, db=0)
 S3_BUCKET = 'postureimagebucket'
 S3_REGION = 'us-east-2'
 s3 = boto3.client('s3', region_name=S3_REGION)
