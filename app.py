@@ -444,7 +444,32 @@ def saveImages():
         app.logger.error(f"An error occurred during image upload and save process for user {current_user.id}: {e}")
         return jsonify({"error": "An error occurred during the image upload process"}), 500
 
+@app.route("/deleteImages")
+def deleteImages():
+    patient = request.args.get('data')
+    patient_id = db.session.execute(
+        db.select(Patient.id).filter_by(patient_name=patient, user_id=current_user.id)
+    ).scalar_one_or_none()
 
+    if not patient_id:
+        return jsonify({"error": "Patient not found"}), 404
+
+    patient_images = db.session.execute(
+        db.select(Image).filter_by(patient_id=patient_id).order_by(Image.date_created.desc())
+    ).scalars().all()
+
+    image_data = []
+    for image in patient_images:
+        image_data.append({
+            "id": image.id,
+            "date": image.date_created,
+            "frontImage": image.image_front,
+            "backImage": image.image_back,
+            "leftImage": image.image_left,
+            "rightImage": image.image_right
+        })
+
+    return render_template("deleteImages.html", data=image_data)
 @app.route("/removeImages", methods=["POST"])
 def removeImages():
     data = request.json
