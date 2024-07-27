@@ -34,7 +34,9 @@ app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'session:'
 app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379, db=0)
-
+CLOUDFRONT_TO_S3_BUCKET = {
+    'd12345abcdefg.cloudfront.net': 'your-s3-bucket-name'
+}
 # Initialize Flask-Session
 Session(app)
 
@@ -63,11 +65,18 @@ if not app.debug:
     app.logger.addHandler(handler)
 
 # Function to delete an object from S3
+
 def delete_s3_object(url):
     try:
         parsed_url = urlparse(url)
-        bucket_name = parsed_url.netloc.split('.')[0]
+        cloudfront_domain = parsed_url.netloc
         key = parsed_url.path.lstrip('/')
+
+        # Map CloudFront domain to S3 bucket name
+        bucket_name = CLOUDFRONT_TO_S3_BUCKET.get(cloudfront_domain)
+        if not bucket_name:
+            raise ValueError(f"No S3 bucket mapping found for CloudFront domain: {cloudfront_domain}")
+
         app.logger.info(f"Deleting object from S3 - Bucket: {bucket_name}, Key: {key}")
         s3_client.delete_object(Bucket=bucket_name, Key=key)
         app.logger.info(f"Deleted {key} from {bucket_name}")
