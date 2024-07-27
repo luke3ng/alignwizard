@@ -15,12 +15,18 @@ import redis
 import boto3
 import io
 from urllib.parse import urlparse
-import flask_session
+from flask_session import Session
 
 app = Flask(__name__, static_folder='static')
+
+# Set the SECRET_KEY for securely signing the session cookie
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
+
+# Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:Halotop002%3F@alignwizarddb.cbmaie42gjxa.us-east-2.rds.amazonaws.com:5432/alignDB'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Session configuration
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_TYPE'] = 'redis'
@@ -28,14 +34,25 @@ app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'session:'
 app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379, db=0)
+
+# Initialize Flask-Session
+Session(app)
+
+# AWS S3 configuration
 S3_BUCKET = 'postureimagebucket'
 S3_REGION = 'us-east-2'
 s3 = boto3.client('s3', region_name=S3_REGION)
-db = SQLAlchemy(app)
 s3_client = boto3.client('s3', region_name=S3_REGION)
+
+# Initialize SQLAlchemy
+db = SQLAlchemy(app)
+
+# Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'loginPage'
+
+# CloudFront domain
 CLOUDFRONT_DOMAIN = os.environ.get('CLOUDFRONT_DOMAIN', 'd18t3ps388njbv.cloudfront.net')
 
 # Set up logging
@@ -48,44 +65,29 @@ if not app.debug:
 GLOBAL_IMAGES_KEY = "globalImages"
 SAVED_IMAGES_KEY = "savedImages"
 
-
+# Function to delete an object from S3
 def delete_s3_object(url):
     try:
-        # Parse the URL to get the bucket name and key
         parsed_url = urlparse(url)
         bucket_name = parsed_url.netloc.split('.')[0]
         key = parsed_url.path.lstrip('/')
-
-        # Log the parsed information
         app.logger.info(f"Deleting object from S3 - Bucket: {bucket_name}, Key: {key}")
-
-        # Delete the object from S3
         s3_client.delete_object(Bucket=bucket_name, Key=key)
         app.logger.info(f"Deleted {key} from {bucket_name}")
     except Exception as e:
         app.logger.error(f"Error deleting object {key} from {bucket_name}: {e}")
 
-
 # Function to upload to S3
 def upload_to_s3(file, filename, bucket_name):
     try:
         app.logger.info(f"Uploading {filename} to S3 bucket {bucket_name}")
-        s3_client.upload_fileobj(
-            file,
-            bucket_name,
-            filename,
-            ExtraArgs={
-                "ContentType": "image/jpeg"
-            }
-        )
+        s3_client.upload_fileobj(file, bucket_name, filename, ExtraArgs={"ContentType": "image/jpeg"})
         app.logger.info(f"Successfully uploaded {filename} to S3")
     except Exception as e:
         app.logger.error(f"Failed to upload {filename} to S3: {e}")
         return None
-    # Generate the CloudFront URL for the uploaded file
     cloudfront_url = f"https://{CLOUDFRONT_DOMAIN}/{filename}"
     return cloudfront_url
-
 
 # Helper function to get Redis client
 def get_redis_client():
@@ -146,7 +148,6 @@ class Image(db.Model):
     image_left = db.Column(db.String, nullable=False)   # URL instead of binary
     image_right = db.Column(db.String, nullable=False)  # URL instead of binary
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
-
 
 def addUser(name, email, password):
     password_hash = generate_password_hash(password)
@@ -240,7 +241,6 @@ def findPatient():
     app.logger.info(f"Patient list for user {current_user.id}: {patientList}")
     return render_template("findPatient.html", patientList=patientList)
 
-
 @app.route("/patientHome")
 def patientHome():
     patient_name = request.args.get('data')
@@ -268,7 +268,6 @@ def patientHome():
 
     return render_template("patientHome.html", data=image_data)
 
-
 @app.route("/compareImages")
 def compareImages():
     id1 = request.args.get('date1')
@@ -290,7 +289,6 @@ def compareImages():
         })
 
     return render_template("compareImages.html", data=image_data)
-
 
 @app.route("/enterNewPatient")
 def enterNewPatient():
@@ -372,7 +370,6 @@ def uploadImages():
             set_global_image(redis_client, 'imgRight', imgRight)
     return render_template("uploadImages.html")
 
-
 @app.route("/saveImages", methods=['POST'])
 def saveImages():
     redis_client = get_redis_client()
@@ -434,7 +431,6 @@ def saveImages():
         app.logger.error(f"An error occurred during image upload and save process for user {current_user.id}: {e}")
         return jsonify({"error": "An error occurred during the image upload process"}), 500
 
-
 @app.route("/deleteImages")
 def deleteImages():
     patient = request.args.get('data')
@@ -461,7 +457,6 @@ def deleteImages():
         })
 
     return render_template("deleteImages.html", data=image_data)
-
 
 @app.route("/removeImages", methods=["POST"])
 def removeImages():
