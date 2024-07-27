@@ -42,17 +42,21 @@ SAVED_IMAGES_KEY = "savedImages"
 
 
 def delete_s3_object(url):
-    # Parse the URL to get the bucket name and key
-    parsed_url = urlparse(url)
-    bucket_name = parsed_url.netloc.split('.')[0]
-    key = parsed_url.path.lstrip('/')
-
     try:
+        # Parse the URL to get the bucket name and key
+        parsed_url = urlparse(url)
+        bucket_name = parsed_url.netloc.split('.')[0]
+        key = parsed_url.path.lstrip('/')
+
+        # Log the parsed information
+        app.logger.info(f"Deleting object from S3 - Bucket: {bucket_name}, Key: {key}")
+
         # Delete the object from S3
         s3_client.delete_object(Bucket=bucket_name, Key=key)
-        print(f"Deleted {key} from {bucket_name}")
+        app.logger.info(f"Deleted {key} from {bucket_name}")
     except Exception as e:
-        print(f"Error deleting object {key} from {bucket_name}: {e}")
+        app.logger.error(f"Error deleting object {key} from {bucket_name}: {e}")
+
 
 
 # Function to upload to S3
