@@ -61,10 +61,6 @@ if not app.debug:
     handler.setLevel(logging.INFO)
     app.logger.addHandler(handler)
 
-# Redis keys
-GLOBAL_IMAGES_KEY = "globalImages"
-SAVED_IMAGES_KEY = "savedImages"
-
 # Function to delete an object from S3
 def delete_s3_object(url):
     try:
@@ -90,16 +86,19 @@ def upload_to_s3(file, user_id, patient_id, filename, bucket_name):
     cloudfront_url = f"https://{CLOUDFRONT_DOMAIN}/{unique_filename}"
     return cloudfront_url
 
-
 # Helper function to get Redis client
 def get_redis_client():
     if 'redis_client' not in g:
         g.redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
     return g.redis_client
 
+# Helper function to generate user-specific Redis keys
+def generate_redis_key(base_key):
+    return f"{current_user.id}_{base_key}"
+
 # Helper functions to interact with Redis
 def get_global_image(redis_client, image_key):
-    user_key = f"{current_user.id}_{image_key}"
+    user_key = generate_redis_key(image_key)
     image_data = redis_client.hget(GLOBAL_IMAGES_KEY, user_key)
     if image_data:
         np_arr = np.frombuffer(base64.b64decode(image_data), np.uint8)
@@ -107,13 +106,13 @@ def get_global_image(redis_client, image_key):
     return None
 
 def set_global_image(redis_client, image_key, image):
-    user_key = f"{current_user.id}_{image_key}"
+    user_key = generate_redis_key(image_key)
     _, buffer = cv2.imencode('.png', image)
     image_data = base64.b64encode(buffer).decode('utf-8')
     redis_client.hset(GLOBAL_IMAGES_KEY, user_key, image_data)
 
 def get_saved_image(redis_client, image_key):
-    user_key = f"{current_user.id}_{image_key}"
+    user_key = generate_redis_key(image_key)
     image_data = redis_client.hget(SAVED_IMAGES_KEY, user_key)
     if image_data:
         np_arr = np.frombuffer(base64.b64decode(image_data), np.uint8)
@@ -121,7 +120,7 @@ def get_saved_image(redis_client, image_key):
     return None
 
 def set_saved_image(redis_client, image_key, image):
-    user_key = f"{current_user.id}_{image_key}"
+    user_key = generate_redis_key(image_key)
     _, buffer = cv2.imencode('.png', image)
     image_data = base64.b64encode(buffer).decode('utf-8')
     redis_client.hset(SAVED_IMAGES_KEY, user_key, image_data)
@@ -433,7 +432,6 @@ def saveImages():
         app.logger.error(f"An error occurred during image upload and save process for user {current_user.id}: {e}")
         return jsonify({"error": "An error occurred during the image upload process"}), 500
 
-
 @app.route("/deleteImages")
 def deleteImages():
     patient = request.args.get('data')
@@ -613,3 +611,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=False)  # Ensure debug is False for production
+
