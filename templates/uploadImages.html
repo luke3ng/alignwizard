@@ -12,7 +12,7 @@
             text-align: center;
             box-sizing: border-box;
             width: calc(55% - 40px); /* Adjust width to fit 2 columns */
-            height: auto; /* Allow height to be auto-adjusted */
+            height: 600px; /* Fixed height to contain the images */
             position: relative; /* Needed for absolute positioning of the canvas */
         }
 
@@ -29,9 +29,14 @@
         img {
             object-fit: contain;
             max-width: 100%;
-            max-height: 600px; /* Max height to contain the image */
+            max-height: 100%;
             display: block;
             margin: 0 auto;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
 
         canvas {
@@ -137,21 +142,27 @@
                     const fileType = file.type;
                     if (/^image\//.test(fileType)) {
                         const imgElement = document.getElementById(imgElementId);
+                        const canvas = document.getElementById(canvasElementId);
                         imgElement.src = URL.createObjectURL(file);
 
-                        const img = new Image();
-                        img.src = imgElement.src;
-                        img.onload = function() {
-                            const aspectRatio = img.width / img.height;
-                            const displayHeight = 600; // Fixed height
-                            const displayWidth = displayHeight * aspectRatio; // Maintain aspect ratio
-                            imgElement.style.width = displayWidth + "px";
-                            imgElement.style.height = displayHeight + "px";
+                        imgElement.onload = function() {
+                            const imgWidth = imgElement.naturalWidth;
+                            const imgHeight = imgElement.naturalHeight;
+                            const containerWidth = imgElement.offsetWidth;
+                            const containerHeight = imgElement.offsetHeight;
 
-                            const canvas = document.getElementById(canvasElementId);
+                            if (imgWidth / imgHeight > containerWidth / containerHeight) {
+                                canvas.width = containerWidth;
+                                canvas.height = containerWidth * (imgHeight / imgWidth);
+                            } else {
+                                canvas.width = containerHeight * (imgWidth / imgHeight);
+                                canvas.height = containerHeight;
+                            }
+
+                            canvas.style.top = imgElement.offsetTop + 'px';
+                            canvas.style.left = imgElement.offsetLeft + 'px';
+
                             const ctx = canvas.getContext("2d");
-                            canvas.width = imgElement.offsetWidth;
-                            canvas.height = imgElement.offsetHeight;
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                             imgElement.addEventListener("click", function(event) {
@@ -159,7 +170,6 @@
                                     const rect = imgElement.getBoundingClientRect();
                                     const x = event.clientX - rect.left; // Coordinates relative to the image
                                     const y = event.clientY - rect.top;  // Coordinates relative to the image
-                                    console.log("Client-side coordinates:", x, y, "Image dimensions:", rect.width, rect.height);
 
                                     // Clear the canvas
                                     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -262,3 +272,4 @@
     </script>
 </body>
 </html>
+
