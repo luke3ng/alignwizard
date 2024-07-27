@@ -51,7 +51,8 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'loginPage'
-
+GLOBAL_IMAGES_KEY = "globalImages"
+SAVED_IMAGES_KEY = "savedImages"
 # CloudFront domain
 CLOUDFRONT_DOMAIN = os.environ.get('CLOUDFRONT_DOMAIN', 'd18t3ps388njbv.cloudfront.net')
 
