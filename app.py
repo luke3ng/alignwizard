@@ -78,16 +78,18 @@ def delete_s3_object(url):
         app.logger.error(f"Error deleting object {key} from {bucket_name}: {e}")
 
 # Function to upload to S3
-def upload_to_s3(file, filename, bucket_name):
+def upload_to_s3(file, user_id, patient_id, filename, bucket_name):
     try:
-        app.logger.info(f"Uploading {filename} to S3 bucket {bucket_name}")
-        s3_client.upload_fileobj(file, bucket_name, filename, ExtraArgs={"ContentType": "image/jpeg"})
-        app.logger.info(f"Successfully uploaded {filename} to S3")
+        unique_filename = f"{user_id}_{patient_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+        app.logger.info(f"Uploading {unique_filename} to S3 bucket {bucket_name}")
+        s3_client.upload_fileobj(file, bucket_name, unique_filename, ExtraArgs={"ContentType": "image/jpeg"})
+        app.logger.info(f"Successfully uploaded {unique_filename} to S3")
     except Exception as e:
         app.logger.error(f"Failed to upload {filename} to S3: {e}")
         return None
-    cloudfront_url = f"https://{CLOUDFRONT_DOMAIN}/{filename}"
+    cloudfront_url = f"https://{CLOUDFRONT_DOMAIN}/{unique_filename}"
     return cloudfront_url
+
 
 # Helper function to get Redis client
 def get_redis_client():
@@ -402,10 +404,10 @@ def saveImages():
         left_image_bytes = io.BytesIO(cv2.imencode('.jpg', left_image)[1])
         right_image_bytes = io.BytesIO(cv2.imencode('.jpg', right_image)[1])
 
-        front_image_url = upload_to_s3(front_image_bytes, f"{patient.id}_set{set_id}_front.jpg", S3_BUCKET)
-        back_image_url = upload_to_s3(back_image_bytes, f"{patient.id}_set{set_id}_back.jpg", S3_BUCKET)
-        left_image_url = upload_to_s3(left_image_bytes, f"{patient.id}_set{set_id}_left.jpg", S3_BUCKET)
-        right_image_url = upload_to_s3(right_image_bytes, f"{patient.id}_set{set_id}_right.jpg", S3_BUCKET)
+        front_image_url = upload_to_s3(front_image_bytes, current_user.id, patient.id, 'front.jpg', S3_BUCKET)
+        back_image_url = upload_to_s3(back_image_bytes, current_user.id, patient.id, 'back.jpg', S3_BUCKET)
+        left_image_url = upload_to_s3(left_image_bytes, current_user.id, patient.id, 'left.jpg', S3_BUCKET)
+        right_image_url = upload_to_s3(right_image_bytes, current_user.id, patient.id, 'right.jpg', S3_BUCKET)
 
         # Check if all URLs are generated
         if not all([front_image_url, back_image_url, left_image_url, right_image_url]):
@@ -430,6 +432,7 @@ def saveImages():
     except Exception as e:
         app.logger.error(f"An error occurred during image upload and save process for user {current_user.id}: {e}")
         return jsonify({"error": "An error occurred during the image upload process"}), 500
+
 
 @app.route("/deleteImages")
 def deleteImages():
