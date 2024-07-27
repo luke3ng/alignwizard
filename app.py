@@ -58,7 +58,6 @@ def delete_s3_object(url):
         app.logger.error(f"Error deleting object {key} from {bucket_name}: {e}")
 
 
-
 # Function to upload to S3
 def upload_to_s3(file, filename, bucket_name):
     try:
@@ -88,28 +87,32 @@ def get_redis_client():
 
 # Helper functions to interact with Redis
 def get_global_image(redis_client, image_key):
-    image_data = redis_client.hget(GLOBAL_IMAGES_KEY, image_key)
+    user_key = f"{current_user.id}_{image_key}"
+    image_data = redis_client.hget(GLOBAL_IMAGES_KEY, user_key)
     if image_data:
         np_arr = np.frombuffer(base64.b64decode(image_data), np.uint8)
         return cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     return None
 
 def set_global_image(redis_client, image_key, image):
+    user_key = f"{current_user.id}_{image_key}"
     _, buffer = cv2.imencode('.png', image)
     image_data = base64.b64encode(buffer).decode('utf-8')
-    redis_client.hset(GLOBAL_IMAGES_KEY, image_key, image_data)
+    redis_client.hset(GLOBAL_IMAGES_KEY, user_key, image_data)
 
 def get_saved_image(redis_client, image_key):
-    image_data = redis_client.hget(SAVED_IMAGES_KEY, image_key)
+    user_key = f"{current_user.id}_{image_key}"
+    image_data = redis_client.hget(SAVED_IMAGES_KEY, user_key)
     if image_data:
         np_arr = np.frombuffer(base64.b64decode(image_data), np.uint8)
         return cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     return None
 
 def set_saved_image(redis_client, image_key, image):
+    user_key = f"{current_user.id}_{image_key}"
     _, buffer = cv2.imencode('.png', image)
     image_data = base64.b64encode(buffer).decode('utf-8')
-    redis_client.hset(SAVED_IMAGES_KEY, image_key, image_data)
+    redis_client.hset(SAVED_IMAGES_KEY, user_key, image_data)
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -371,10 +374,10 @@ def saveImages():
     # Generate a unique set_id based on the current timestamp
     set_id = datetime.now().strftime("%Y%m%d%H%M%S")
 
-    # Find the patient by name
-    patient = db.session.execute(db.select(Patient).filter_by(patient_name=patientName)).scalar()
+    # Find the patient by name and current user
+    patient = db.session.execute(db.select(Patient).filter_by(patient_name=patientName, user_id=current_user.id)).scalar()
     if not patient:
-        app.logger.error(f"Patient {patientName} not found")
+        app.logger.error(f"Patient {patientName} not found for user {current_user.id}")
         return jsonify({"error": "Patient not found"}), 404
 
     front_image = get_saved_image(redis_client, 'front')
@@ -384,7 +387,7 @@ def saveImages():
 
     # Check if any image is None
     if front_image is None or back_image is None or left_image is None or right_image is None:
-        app.logger.error("One or more images are missing")
+        app.logger.error(f"One or more images are missing for user {current_user.id}")
         return jsonify({"error": "One or more images are missing"}), 400
 
     # Encode images to JPEG and upload to S3
@@ -401,7 +404,7 @@ def saveImages():
 
         # Check if all URLs are generated
         if not all([front_image_url, back_image_url, left_image_url, right_image_url]):
-            app.logger.error("Failed to upload one or more images to S3")
+            app.logger.error(f"Failed to upload one or more images to S3 for user {current_user.id}")
             return jsonify({"error": "Failed to upload one or more images to S3"}), 500
 
         # Save URLs in the database
@@ -416,14 +419,12 @@ def saveImages():
         db.session.add(new_image_record)
         db.session.commit()
 
-        app.logger.info("Successfully uploaded images and saved to database")
+        app.logger.info(f"Successfully uploaded images and saved to database for user {current_user.id}")
         return jsonify({"message": "Successful Image Upload", "set_id": set_id})
 
     except Exception as e:
-        app.logger.error(f"An error occurred during image upload and save process: {e}")
+        app.logger.error(f"An error occurred during image upload and save process for user {current_user.id}: {e}")
         return jsonify({"error": "An error occurred during the image upload process"}), 500
-
-
 
 
 @app.route("/deleteImages")
@@ -498,6 +499,7 @@ def get_coordinatesFront():
     else:
         app.logger.error("imgFront not found in globalImages")
         return jsonify({"error": "imgFront not found"}), 400
+
 @app.route("/uploadFront", methods=['POST'])
 def uploadFront():
     redis_client = get_redis_client()
@@ -605,4 +607,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=False)  # Ensure debug is False for production
-
