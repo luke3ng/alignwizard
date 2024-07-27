@@ -11,7 +11,6 @@
             padding: 10px;
             text-align: center;
             box-sizing: border-box;
-            height: 600px;
             width: calc(55% - 40px); /* Adjust width to fit 2 columns */
             position: relative; /* Needed for absolute positioning of the canvas */
         }
@@ -29,7 +28,7 @@
         img {
             object-fit: contain;
             max-width: 100%;
-            max-height: 100%;
+            max-height: 600px; /* Cap image height at 600px */
             display: block;
             margin: 0 auto;
         }
@@ -160,8 +159,9 @@
                             canvas.style.top = imgElement.offsetTop + 'px';
                             canvas.style.left = imgElement.offsetLeft + 'px';
 
-                            // Adjust the container height to fit the image
-                            container.style.height = (imgElement.height + 100) + 'px';
+                            // Adjust the container height to fit the image, capped at 600px
+                            const cappedHeight = Math.min(imgElement.height, 600);
+                            container.style.height = (cappedHeight + 100) + 'px';
 
                             const ctx = canvas.getContext("2d");
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
