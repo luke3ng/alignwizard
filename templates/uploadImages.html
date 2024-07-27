@@ -12,7 +12,6 @@
             text-align: center;
             box-sizing: border-box;
             width: calc(55% - 40px); /* Adjust width to fit 2 columns */
-            height: 600px; /* Fixed height to contain the images */
             position: relative; /* Needed for absolute positioning of the canvas */
         }
 
@@ -79,25 +78,25 @@
 </head>
 <body>
     <div class="container">
-        <div class="inputoutput">
+        <div class="inputoutput" id="inputoutputFront">
             <img id="imageSrcFront" alt="No Image" />
             <canvas id="canvasFront"></canvas>
             <div class="caption">Front <input type="file" id="fileInputFront" name="fileInputFront" /></div>
             <button id="addLinesFront" type="button" class="button">Add lines</button>
         </div>
-        <div class="inputoutput">
+        <div class="inputoutput" id="inputoutputBack">
             <img id="imageSrcBack" alt="No Image" />
             <canvas id="canvasBack"></canvas>
             <div class="caption">Back <input type="file" id="fileInputBack" name="fileInputBack" /></div>
             <button id="addLinesBack" type="button" class="button">Add lines</button>
         </div>
-        <div class="inputoutput">
+        <div class="inputoutput" id="inputoutputLeft">
             <img id="imageSrcLeft" alt="No Image" />
             <canvas id="canvasLeft"></canvas>
             <div class="caption">Left <input type="file" id="fileInputLeft" name="fileInputLeft" /></div>
             <button id="addLinesLeft" type="button" class="button">Add lines</button>
         </div>
-        <div class="inputoutput">
+        <div class="inputoutput" id="inputoutputRight">
             <img id="imageSrcRight" alt="No Image" />
             <canvas id="canvasRight"></canvas>
             <div class="caption">Right <input type="file" id="fileInputRight" name="fileInputRight" /></div>
@@ -131,13 +130,14 @@
                 }
             }
 
-            function handleFileSelect(event, imgElementId, canvasElementId, side) {
+            function handleFileSelect(event, imgElementId, canvasElementId, containerElementId, side) {
                 const file = event.target.files[0];
                 if (file) {
                     const fileType = file.type;
                     if (/^image\//.test(fileType)) {
                         const imgElement = document.getElementById(imgElementId);
                         const canvas = document.getElementById(canvasElementId);
+                        const container = document.getElementById(containerElementId);
                         imgElement.src = URL.createObjectURL(file);
 
                         imgElement.onload = function() {
@@ -158,6 +158,9 @@
                             canvas.style.height = canvasHeight + 'px';
                             canvas.style.top = imgElement.offsetTop + 'px';
                             canvas.style.left = imgElement.offsetLeft + 'px';
+
+                            // Adjust the container height to fit the image
+                            container.style.height = (imgElement.height + 100) + 'px';
 
                             const ctx = canvas.getContext("2d");
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -233,7 +236,7 @@
 
                 $("#fileInput" + side).on("change", function(event) {
                     console.log("File input changed for side:", side); // Debugging log
-                    handleFileSelect(event, "imageSrc" + side, "canvas" + side, side);
+                    handleFileSelect(event, "imageSrc" + side, "canvas" + side, "inputoutput" + side, side);
                 });
             });
 
@@ -269,4 +272,3 @@
     </script>
 </body>
 </html>
-
