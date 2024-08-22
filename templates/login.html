@@ -5,14 +5,13 @@
 {% block content %}
 <h1>Login</h1>
 <div class="login-wrap">
-
-
   <div class="form">
-    <input type="text" id="un" placeholder="email" name="un" />
+    <input type="text" id="un" placeholder="Email" name="un" />
     <input type="password" id="pw" placeholder="Password" name="pw" />
     <button id="sign-in">Sign in</button>
     <a href="/signUp"> <p>Don't have an account? Register</p></a>
+    <a href="/forgotPassword"> <p>Forgot Password?</p></a>
   </div>
 </div>
-    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
 {% endblock %}
