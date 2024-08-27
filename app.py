@@ -309,6 +309,7 @@ def enterNewPatient():
 def getUser():
     data = request.json
     email = data.get('email')
+    email = email.lower()
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and check_password_hash(user.password_hash, password):
@@ -320,6 +321,7 @@ def getUser():
 def createUser():
     data = request.json
     email = data['email']
+    email = email.lower()
     password = data['password']
     name = data['name']
     nameTaken = db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none()
