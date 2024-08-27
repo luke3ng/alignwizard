@@ -141,6 +141,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     patients = db.relationship('Patient', backref='user', lazy=True)
+    imageNum =db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return f'<User {self.name}>'
@@ -388,6 +389,12 @@ def saveImages():
     redis_client = get_redis_client()
     data = request.json
     patientName = data['patientData']
+    numImg = db.session.execute(
+        db.select(User.imageNum)
+        .filter_by(id=current_user.id)
+    ).scalar_one_or_none()
+    if numImg >= 2000:
+        return jsonify({"error": "Reached Image Limit"}), 400
 
     # Generate a unique set_id based on the current timestamp
     set_id = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -433,7 +440,7 @@ def saveImages():
             image_right=right_image_url,
             patient_id=patient.id
         )
-
+        current_user.imageNum += 4
         db.session.add(new_image_record)
         db.session.commit()
 
@@ -448,6 +455,9 @@ def saveImages():
         redis_client.hdel(SAVED_IMAGES_KEY, generate_redis_key('back'))
         redis_client.hdel(SAVED_IMAGES_KEY, generate_redis_key('left'))
         redis_client.hdel(SAVED_IMAGES_KEY, generate_redis_key('right'))
+
+
+
 
         return jsonify({"message": "Successful Image Upload", "set_id": set_id})
 
