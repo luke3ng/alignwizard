@@ -10942,17 +10942,7 @@ p {
     margin-right: 0;
   }
 }
-header.masthead {
-  padding-top: 10.5rem;
-  padding-bottom: 6rem;
-  text-align: center;
-  color: #fff;
-  background: url('{{ url_for('static', filename='css/mast.jpg') }}') !important;
-  background-repeat: no-repeat;
-  background-attachment: scroll;
-  background-position: center center;
-  background-size: cover;
-}
+
 header.masthead .masthead-subheading {
   font-size: 1.5rem;
   font-style: italic;
